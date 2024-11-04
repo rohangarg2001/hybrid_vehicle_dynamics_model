@@ -52,4 +52,6 @@ class DyanmicsDataset(Dataset):
 
     def __getitem__(self, idx):
         # return idx row from each modality in self.modality_processed_data
+        # return [idx:idx+horizon*dt] for ground_truth
+        # drop last few rows for all modalities as there wouldnt be enough horizon for them
         return {modality: data[idx] for modality, data in self.modality_processed_data.items()}
