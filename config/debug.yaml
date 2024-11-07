@@ -6,9 +6,11 @@ data:
     dt: 0.1
     modalities:
         super_odom:
+            type: state
             frequency: 100
             description: "Super Odometry"
         cmd:
+            type: action
             frequency: 10
             description: "Control Input"
 
