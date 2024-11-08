@@ -23,8 +23,8 @@ def run_experiment():
         test_size=config["train"]["train_split"]
     )
     train_dataset = DyanmicsDataset(config, data_train, True)
-    test_dataset = DyanmicsDataset(config, data_test, True)
-    val_dataset = DyanmicsDataset(config, data_val, True)
+    test_dataset = DyanmicsDataset(config, data_test, False)
+    val_dataset = DyanmicsDataset(config, data_val, False)
     print(f"{len(train_dataset)=}")
     print(f"{len(test_dataset)=}")
     print(f"{len(val_dataset)=}")
