@@ -1,20 +1,19 @@
 import pytorch_lightning as pl
-import torch
 from pytorch_lightning.loggers import WandbLogger
 
 import wandb
 from config.config import load_config
 from src.data.datamodule import DyanmicsDataset
 from src.data.datasplit import DataSplitUtils
-from src.trainer.mlp_trainer import SimpleMLPModule
+from src.trainer.simple_trainer import TrainerModule
 
-pl.seed_everything(4)
 wandb_logger = WandbLogger(project="229-project")
 
 
 def run_experiment():
 
     config = load_config("config/debug.yaml")
+    pl.seed_everything(config["seed"])
     # Read dataset
     data_class = DataSplitUtils(config["data"]["dataset_path"])
     _ = DataSplitUtils.load_data(data_class, config["data"]["modalities"].keys())
@@ -31,14 +30,11 @@ def run_experiment():
     train_loader = train_dataset.get_dataloader()
     test_loader = test_dataset.get_dataloader()
     val_loader = val_dataset.get_dataloader()
-    model = SimpleMLPModule(
-        config, 13, 2, 20
-    )  # remove hardcoding, wrap this in a class
-    # if gpu is available pass accelerator='gpu' to the trainer
+    model = TrainerModule(config, 13, 2)  # remove hardcoding, wrap this in a class
     trainer = pl.Trainer(
         max_epochs=config["train"]["max_epochs"],
         logger=wandb_logger,
-        gpus=torch.cuda.device_count(),
+        accelerator="gpu",
         fast_dev_run=config["fast_dev_run"],
     )
     trainer.fit(model, train_loader, val_loader)
