@@ -21,8 +21,9 @@ class SimpleMLP(nn.Module):
         )
 
     def forward(self, state, actions):
+        B, S = state.shape
         B, T, _ = actions.shape
-        predictions = torch.zeros(B, T, 13).to(state.device)
+        predictions = torch.zeros(B, T, S).to(state.device)
         for t in range(T):
             input = (
                 torch.cat([state, actions[:, t, :]], dim=-1).float().to(state.device)
