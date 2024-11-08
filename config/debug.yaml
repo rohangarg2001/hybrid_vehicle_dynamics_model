@@ -27,4 +27,4 @@ model:
     hidden_size: 128
     num_layers: 2
 seed: 4
-fast_dev_run: True
+fast_dev_run: False
