@@ -15,7 +15,7 @@ data:
             description: "Control Input"
 
 train:
-    batch_size: 128
+    batch_size: 32
     max_epochs: 15
     learning_rate: 0.0001
     optimizer: "adam"
@@ -23,6 +23,7 @@ train:
     train_split: 0.5
     accuracy: "mse"
 model:
+    type: "seq2seq" # "mlp"
     hidden_size: 128
     num_layers: 2
 seed: 4

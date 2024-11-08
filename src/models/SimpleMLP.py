@@ -1,12 +1,12 @@
+import torch
 from torch import nn
 
 
 class SimpleMLP(nn.Module):
-    def __init__(self, config, state_size, action_size, horizon_size):
+    def __init__(self, config, state_size, action_size):
         super().__init__()
         self.config = config
         self.state_size = state_size
-        self.horizon_size = horizon_size
         self.action_size = action_size
         self.input_size = state_size + action_size
         print(f"{self.input_size=}")
@@ -20,5 +20,15 @@ class SimpleMLP(nn.Module):
             nn.Linear(hidden_dim, state_size),
         )
 
-    def forward(self, x):
-        return self.mlp(x)
+    def forward(self, state, actions):
+        B, T, _ = actions.shape
+        predictions = torch.zeros(B, T, 13).to(state.device)
+        for t in range(T):
+            input = (
+                torch.cat([state, actions[:, t, :]], dim=-1).float().to(state.device)
+            )
+            next_state = self.mlp(input)
+            predictions[:, t, :] = next_state
+            state = next_state
+
+        return predictions

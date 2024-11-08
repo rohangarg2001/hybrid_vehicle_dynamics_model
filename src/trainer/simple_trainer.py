@@ -3,38 +3,32 @@ import torch
 import torchmetrics as tm
 from torch import nn
 
+from src.models.Seq2SeqModel import Seq2SeqModel
 from src.models.SimpleMLP import SimpleMLP
 
 
-class SimpleMLPModule(L.LightningModule):
-    def __init__(self, config, state_size, action_size, horizon_size):
+class TrainerModule(L.LightningModule):
+    def __init__(self, config, state_size, action_size):
         super().__init__()
         self.config = config
-        self.mlp = SimpleMLP(config, state_size, action_size, horizon_size)
+
+        self.e2e_model = None
+        if self.config["model"]["type"] == "simple_mlp":
+            self.e2e_model = SimpleMLP(config, state_size, action_size)
+        elif self.config["model"]["type"] == "seq2seq":
+            self.e2e_model = Seq2SeqModel(config, state_size, action_size)
         self.accuracy = tm.MeanSquaredError().to(self.device)
 
     def forward(self, state, actions):
         """
         Args:
-            state (torch.Tensor): The input state at time t, shape (B, 13).
-            actions (torch.Tensor): The actions input from time t to t+T, shape (B, T, 2).
+            state (torch.Tensor): The input state at time t, shape (B, state_size).
+            actions (torch.Tensor): The actions input from time t to t+T, shape (B, T, action_size).
 
         Returns:
-            torch.Tensor: The predicted states from t+1 to t+T+1, shape (B, T, 13).
+            torch.Tensor: The predicted states from t+1 to t+T+1, shape (B, T, state_size).
         """
-        B, T, _ = actions.shape
-
-        predictions = torch.zeros(B, T, 13).to(state.device)
-
-        for t in range(T):
-            input = (
-                torch.cat([state, actions[:, t, :]], dim=-1).float().to(state.device)
-            )
-            next_state = self.mlp(input)
-            predictions[:, t, :] = next_state
-            state = next_state
-
-        return predictions
+        return self.e2e_model(state, actions)
 
     def train_loss(self, predictions, targets):
         if self.config["train"]["loss"] == "mse":
