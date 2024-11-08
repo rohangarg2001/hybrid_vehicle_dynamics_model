@@ -1,6 +1,7 @@
 from typing import Dict
 
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -52,10 +53,30 @@ class DyanmicsDataset(Dataset):
                 self.modality_processed_data[modality]
             )
         self.processed_state = self.construct_state()
+        print(f"{self.processed_state.shape=}")
 
-    # TODO: construct state from super_odom and steering angle
     def construct_state(self):
-        return
+        base_state = self.modality_processed_data["super_odom"]  # (N, 13)
+        # 4th 5th 6th 7th columns of base_state is quaternion convert it to rotation matrix for each sample
+        rot_matrix = R.from_quat(base_state[:, 3:7]).as_matrix()
+        # convert rotation matrix to 6D representation
+        rot_6 = rot_matrix[:, :, [0, 1]].reshape(base_state.shape[0], -1)
+        print(f"{rot_6.shape=}")
+        steering_angle = self.modality_processed_data["cmd"][:, 1].reshape(
+            -1, 1
+        )  # (N, 1) instead of (N,)
+        # tranform wheel angle to steering angle
+        transformed_steering_angle = steering_angle * (30.0 / 415.0) * (-np.pi / 180.0)
+        # create the transformed state by replacing columns 3 to 7 with rot_6 and appending the transformed_steering angle
+        transformed_state = np.hstack(
+            [
+                base_state[:, :3],
+                rot_6,
+                base_state[:, 7:],
+                transformed_steering_angle,
+            ],
+        )
+        return transformed_state
 
     @property
     def horizon_rows(self):
@@ -63,28 +84,25 @@ class DyanmicsDataset(Dataset):
 
     def __len__(self):
         return (
-            list(self.modality_processed_data.values())[0].shape[0]
-            - self.horizon_rows
-            - 1
+            self.processed_state.shape[0] - self.horizon_rows - 1
         )  # no of datapoints for each modality is now the same
 
     def __getitem__(self, idx):
-        current_state = {}
+        current_state = self.processed_state[idx]
         environment = {}  # rgb etc?
-        ground_truth = None
+        ground_truth = self.processed_state[idx + 1 : idx + 1 + (self.horizon_rows)]
         action_horizon = None
         for modality in self.modalities:
-            if self.config["data"]["modalities"][modality]["type"] == "state":
-                current_state[modality] = self.modality_processed_data[modality][idx]
-                ground_truth = self.modality_processed_data[modality][
-                    idx + 1 : idx + 1 + (self.horizon_rows)
-                ]
+            if self.config["data"]["modalities"][modality]["type"] == "environment":
+                raise NotImplementedError(
+                    "Environment (terrain map, lidar, camera) modalities not implemented"
+                )
             if self.config["data"]["modalities"][modality]["type"] == "action":
                 action_horizon = self.modality_processed_data[modality][
                     idx : idx + (self.horizon_rows)
                 ]
         return {
-            **current_state,
+            "state": current_state,
             **environment,
             "action_horizon": action_horizon,
             "ground_truth": ground_truth,

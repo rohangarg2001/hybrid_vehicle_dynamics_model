@@ -40,7 +40,7 @@ class TrainerModule(L.LightningModule):
 
     def training_step(self, batch, batch_idx):
         # TODO: rename these to state, actions, targets
-        state = batch["super_odom"].float()
+        state = batch["state"].float()
         actions = batch["action_horizon"].float()
         targets = batch["ground_truth"].float()
         predictions = self.forward(state, actions)
@@ -59,7 +59,7 @@ class TrainerModule(L.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         # TODO: rename these to state, actions, targets
-        state = batch["super_odom"].float()
+        state = batch["state"].float()
         actions = batch["action_horizon"].float()
         targets = batch["ground_truth"].float()
         predictions = self.forward(state, actions)
@@ -76,7 +76,7 @@ class TrainerModule(L.LightningModule):
 
     def test_step(self, batch, batch_idx):
         # TODO: rename these to state, actions, targets
-        state = batch["super_odom"].float()
+        state = batch["state"].float()
         actions = batch["action_horizon"].float()
         targets = batch["ground_truth"].float()
         predictions = self.forward(state, actions)

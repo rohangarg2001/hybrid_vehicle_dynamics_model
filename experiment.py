@@ -30,7 +30,7 @@ def run_experiment():
     train_loader = train_dataset.get_dataloader()
     test_loader = test_dataset.get_dataloader()
     val_loader = val_dataset.get_dataloader()
-    model = TrainerModule(config, 13, 2)  # remove hardcoding, wrap this in a class
+    model = TrainerModule(config, 16, 2)  # remove hardcoding, wrap this in a class
     trainer = pl.Trainer(
         max_epochs=config["train"]["max_epochs"],
         logger=wandb_logger,
