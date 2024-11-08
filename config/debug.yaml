@@ -23,7 +23,7 @@ train:
     train_split: 0.5
     accuracy: "mse"
 model:
-    type: "seq2seq" # "mlp"
+    type: "simple_mlp" # "sqq2seq"
     hidden_size: 128
     num_layers: 2
 seed: 4

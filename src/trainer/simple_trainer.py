@@ -17,6 +17,8 @@ class TrainerModule(L.LightningModule):
             self.e2e_model = SimpleMLP(config, state_size, action_size)
         elif self.config["model"]["type"] == "seq2seq":
             self.e2e_model = Seq2SeqModel(config, state_size, action_size)
+        else:
+            raise ValueError(f"Invalid model type: {self.config['model']['type']}")
         self.accuracy = tm.MeanSquaredError().to(self.device)
 
     def forward(self, state, actions):
