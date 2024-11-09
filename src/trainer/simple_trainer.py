@@ -19,7 +19,9 @@ class TrainerModule(L.LightningModule):
             self.e2e_model = Seq2SeqModel(config, state_size, action_size)
         else:
             raise ValueError(f"Invalid model type: {self.config['model']['type']}")
-        self.accuracy = tm.MeanSquaredError().to(self.device)
+        self.mse = tm.MeanSquaredError()
+        self.mae = tm.MeanAbsoluteError()
+        self.mape = tm.MeanAbsolutePercentageError()
 
     def forward(self, state, actions):
         """
@@ -37,8 +39,17 @@ class TrainerModule(L.LightningModule):
             return nn.MSELoss()(predictions, targets)
         raise ValueError(f"Invalid loss function: {self.config['train']['loss']}")
 
-    def train_acc(self, predictions, targets):
-        return self.accuracy(predictions, targets)
+    def compute_metrics(self, predictions, targets, prefix: str = ""):
+        mse = self.mse(predictions, targets)
+        mae = self.mae(predictions, targets)
+        mape = self.mape(predictions, targets)
+        # r2 = self.r2(predictions, targets)
+        return {
+            f"{prefix}_mse": mse,
+            f"{prefix}_mae": mae,
+            f"{prefix}_mape": mape,
+            # f"{prefix}_r2": r2,
+        }
 
     def training_step(self, batch, batch_idx):
         # TODO: rename these to state, actions, targets
@@ -49,14 +60,14 @@ class TrainerModule(L.LightningModule):
         loss = self.train_loss(predictions, targets)
 
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        self.log(
-            "train_mse",
-            self.train_acc(predictions, targets),
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-        )
-
+        train_metrics = self.compute_metrics(predictions, targets, prefix="train")
+        for metric_name, metric_val in train_metrics.items():
+            self.log(
+                metric_name,
+                metric_val,
+                on_step=True,
+                on_epoch=True,
+            )
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -68,13 +79,14 @@ class TrainerModule(L.LightningModule):
         loss = self.train_loss(predictions, targets)
 
         self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        self.log(
-            "val_mse",
-            self.train_acc(predictions, targets),
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-        )
+        val_metrics = self.compute_metrics(predictions, targets, prefix="val")
+        for metric_name, metric_val in val_metrics.items():
+            self.log(
+                metric_name,
+                metric_val,
+                on_step=True,
+                on_epoch=True,
+            )
 
     def test_step(self, batch, batch_idx):
         # TODO: rename these to state, actions, targets
@@ -85,13 +97,14 @@ class TrainerModule(L.LightningModule):
         loss = self.train_loss(predictions, targets)
 
         self.log("test_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        self.log(
-            "test_mse",
-            self.train_acc(predictions, targets),
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-        )
+        test_metrics = self.compute_metrics(predictions, targets, prefix="test")
+        for metric_name, metric_val in test_metrics.items():
+            self.log(
+                metric_name,
+                metric_val,
+                on_step=True,
+                on_epoch=True,
+            )
 
     def configure_optimizers(self):
         if self.config["train"]["optimizer"] == "adam":

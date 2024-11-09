@@ -1,7 +1,7 @@
 data:
     dataset_path: "debug_dataset"
     # input_modalities: ["odom", "imu", ]
-    prediction: ["controls"]
+    # prediction: ["controls"]
     horizon: 2
     dt: 0.1
     modalities:
@@ -16,14 +16,14 @@ data:
 
 train:
     batch_size: 32
-    max_epochs: 15
-    learning_rate: 0.0001
+    max_epochs: 12
+    learning_rate: 0.001
     optimizer: "adam"
     loss: "mse"
     train_split: 0.5
     accuracy: "mse"
 model:
-    type: "simple_mlp" # "sqq2seq"
+    type: "simple_mlp" # "seq2seq"
     hidden_size: 128
     num_layers: 2
 seed: 4
