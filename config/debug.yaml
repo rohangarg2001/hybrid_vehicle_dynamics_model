@@ -2,7 +2,10 @@ data:
     dataset_path: "debug_dataset"
     # input_modalities: ["odom", "imu", ]
     # prediction: ["controls"]
-    horizon: 2
+    horizon:
+        train: 16
+        val: 18
+        test: 20
     dt: 0.1
     modalities:
         super_odom:
