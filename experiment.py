@@ -66,9 +66,9 @@ def run_experiment():
     # TODO: convert the above to a separate script which does this offline, otherwise
     # changing the seed will change the train val test split!!!
 
-    train_dataset = DyanmicsDataset(config, data_train, True)
-    test_dataset = DyanmicsDataset(config, data_test, False)
-    val_dataset = DyanmicsDataset(config, data_val, False)
+    train_dataset = DyanmicsDataset(config, data_train, "train")
+    test_dataset = DyanmicsDataset(config, data_test, "test")
+    val_dataset = DyanmicsDataset(config, data_val, "val")
     print(f"{len(train_dataset)=}")
     print(f"{len(test_dataset)=}")
     print(f"{len(val_dataset)=}")
