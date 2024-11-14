@@ -21,7 +21,7 @@ class DyanmicsDataset(Dataset):
         self.data_dict = data_dict
         self.is_train = ds_type == "train"
         self.dt = self.config["data"]["dt"]
-        self.horizon = self.config["data"]["horizon"][ds_type]
+        self.horizon = self.config["data"]["horizon_seconds"][ds_type]
         self.load_data()
 
     def load_data(self):
@@ -59,12 +59,12 @@ class DyanmicsDataset(Dataset):
                     self.modality_processed_data[modality],
                     self.modality_processed_data["cmd"],
                 ):
-                    processed_state = self.construct_state(instance_state, instance_cmd)
+                    processed_state = self.construct_state(instance_state, instance_cmd)            
                     ground_truth = np.stack(
                         [
                             processed_state[idx + 1 : idx + 1 + self.horizon_rows]
                             for idx in range(
-                                processed_state.shape[0] - self.horizon_rows
+                                processed_state.shape[0] - self.horizon_rows-1
                             )
                         ],
                     )
