@@ -1,5 +1,6 @@
 data:
     dataset_path: "debug_dataset"
+    dataset_split_path: "data_split.json"
     # input_modalities: ["odom", "imu", ]
     # prediction: ["controls"]
     horizon: 2
@@ -13,6 +14,14 @@ data:
             type: action
             frequency: 10
             description: "Control Input"
+        traversability_cost:
+            type: environment
+            frequency: 100
+            description: "Traversability Cost"
+        wheel_rpm:
+            type: environment
+            frequency: 50
+            description: "Wheel RPM"
 
 train:
     batch_size: 32
@@ -27,4 +36,4 @@ model:
     hidden_size: 128
     num_layers: 2
 seed: 4
-fast_dev_run: False
+fast_dev_run: True

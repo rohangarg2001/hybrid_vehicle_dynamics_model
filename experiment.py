@@ -1,3 +1,5 @@
+import argparse
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
@@ -9,11 +11,8 @@ from src.data.datamodule import DyanmicsDataset
 from src.data.datasplit import DataSplitUtils
 from src.trainer.simple_trainer import TrainerModule
 
-wandb_logger = WandbLogger(project="229-project")
-
 
 def visualize(model, loader, title: str):
-
     # sample random batch from loader
     batch = next(iter(loader))
     state = batch["state"].float()
@@ -53,18 +52,27 @@ def visualize(model, loader, title: str):
 
 
 def run_experiment():
-
-    config = load_config("config/debug.yaml")
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="config/debug.yaml",
+        help="Path to the config file",
+    )
+    args = parser.parse_args()
+    config = load_config(args.config)
     pl.seed_everything(config["seed"])
     # Read dataset
     data_class = DataSplitUtils(config["data"]["dataset_path"])
-    _ = DataSplitUtils.load_data(data_class, config["data"]["modalities"].keys())
+    # _ = DataSplitUtils.load_data(
+    #     data_class, config["data"]["modalities"].keys()
+    # )
     # split into train val test
-    data_train, data_test, data_val = data_class.random_train_test_split(
-        test_size=config["train"]["train_split"]
+    # data_class.random_train_test_split(config["train"]["train_split"], config["data"]["dataset_split_path"])
+
+    data_train, data_test, data_val = data_class.load_random_train_test_split(
+        config["data"]["dataset_split_path"]
     )
-    # TODO: convert the above to a separate script which does this offline, otherwise
-    # changing the seed will change the train val test split!!!
 
     train_dataset = DyanmicsDataset(config, data_train, True)
     test_dataset = DyanmicsDataset(config, data_test, False)
@@ -75,7 +83,10 @@ def run_experiment():
     train_loader = train_dataset.get_dataloader()
     test_loader = test_dataset.get_dataloader()
     val_loader = val_dataset.get_dataloader()
-    model = TrainerModule(config, 16, 2)  # remove hardcoding, wrap this in a class
+    model = TrainerModule(
+        config, 16, 2
+    )  # remove hardcoding, wrap this in a class
+    wandb_logger = WandbLogger(project="229-project")
     trainer = pl.Trainer(
         max_epochs=config["train"]["max_epochs"],
         logger=wandb_logger,

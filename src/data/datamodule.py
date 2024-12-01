@@ -30,7 +30,9 @@ class DyanmicsDataset(Dataset):
                 data_string = "data"
                 filepath_string = "timestamp"
                 data_path = self.data_dict[folder_name][modality][data_string]
-                timestamp_path = self.data_dict[folder_name][modality][filepath_string]
+                timestamp_path = self.data_dict[folder_name][modality][
+                    filepath_string
+                ]
                 data = np.load(data_path)
                 timestamps = np.loadtxt(timestamp_path, dtype=np.float64)
                 timestamps = timestamps - timestamps[0]
@@ -40,13 +42,16 @@ class DyanmicsDataset(Dataset):
         # Todo: Do we need timestamps???
         for modality in self.modalities:
             samples_in_window = int(
-                self.dt * self.config["data"]["modalities"][modality]["frequency"]
+                self.dt
+                * self.config["data"]["modalities"][modality]["frequency"]
             )
             for single_file_data in self.modality_file_list_data[modality]:
+                if len(single_file_data.shape) == 1:
+                    single_file_data = single_file_data.reshape(-1, 1)
                 n, k = single_file_data.shape
-                reshaped_data = single_file_data[: n - (n % samples_in_window)].reshape(
-                    -1, samples_in_window, k
-                )
+                reshaped_data = single_file_data[
+                    : n - (n % samples_in_window)
+                ].reshape(-1, samples_in_window, k)
                 averaged_data = reshaped_data.mean(axis=1)
                 self.modality_processed_data[modality].append(averaged_data)
             self.modality_processed_data[modality] = np.vstack(
@@ -66,7 +71,9 @@ class DyanmicsDataset(Dataset):
             -1, 1
         )  # (N, 1) instead of (N,)
         # tranform wheel angle to steering angle
-        transformed_steering_angle = steering_angle * (30.0 / 415.0) * (-np.pi / 180.0)
+        transformed_steering_angle = (
+            steering_angle * (30.0 / 415.0) * (-np.pi / 180.0)
+        )
         # create the transformed state by replacing columns 3 to 7 with rot_6 and appending the transformed_steering angle
         transformed_state = np.hstack(
             [
@@ -90,13 +97,18 @@ class DyanmicsDataset(Dataset):
     def __getitem__(self, idx):
         current_state = self.processed_state[idx]
         environment = {}  # rgb etc?
-        ground_truth = self.processed_state[idx + 1 : idx + 1 + (self.horizon_rows)]
+        ground_truth = self.processed_state[
+            idx + 1 : idx + 1 + (self.horizon_rows)
+        ]
         action_horizon = None
         for modality in self.modalities:
-            if self.config["data"]["modalities"][modality]["type"] == "environment":
-                raise NotImplementedError(
-                    "Environment (terrain map, lidar, camera) modalities not implemented"
-                )
+            if (
+                self.config["data"]["modalities"][modality]["type"]
+                == "environment"
+            ):
+                environment[modality] = self.modality_processed_data[modality][
+                    idx : idx + (self.horizon_rows)
+                ]
             if self.config["data"]["modalities"][modality]["type"] == "action":
                 action_horizon = self.modality_processed_data[modality][
                     idx : idx + (self.horizon_rows)
@@ -110,5 +122,7 @@ class DyanmicsDataset(Dataset):
 
     def get_dataloader(self):
         return DataLoader(
-            self, batch_size=self.config["train"]["batch_size"], shuffle=self.is_train
+            self,
+            batch_size=self.config["train"]["batch_size"],
+            shuffle=self.is_train,
         )

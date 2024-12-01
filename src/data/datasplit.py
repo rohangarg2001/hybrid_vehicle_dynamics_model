@@ -1,3 +1,4 @@
+import json
 import math
 import os
 
@@ -31,18 +32,23 @@ class DataSplitUtils:
                     path = os.path.join(dirs, file)
                     seperated_path = path.split("/")
                     if seperated_path[-2] in modalities:
-                        self.data_dict[seperated_path[1]][seperated_path[2]] = {}
-                        self.data_dict[seperated_path[1]][seperated_path[2]]["data"] = (
-                            os.path.abspath(path)
-                        )
+                        self.data_dict[seperated_path[1]][
+                            seperated_path[2]
+                        ] = {}
+                        self.data_dict[seperated_path[1]][seperated_path[2]][
+                            "data"
+                        ] = os.path.abspath(path)
                         self.data_dict[seperated_path[1]][seperated_path[2]][
                             "timestamp"
-                        ] = os.path.abspath(os.path.join(dirs, "timestamps.txt"))
+                        ] = os.path.abspath(
+                            os.path.join(dirs, "timestamps.txt")
+                        )
         return self.data_dict
 
-    def random_train_test_split(self, test_size):
+    def random_train_test_split(self, test_size, path: str = "data_split.json"):
         """
-        Splits the dataset into random train, test, and validation sets.
+        Splits the dataset into random train, test, and validation sets,
+        saves to a json file, and returns the splits.
         Args:
             test_size (float): Proportion of the dataset to include in the test split.
                                Should be between 0.0 and 1.0.
@@ -67,4 +73,15 @@ class DataSplitUtils:
         test_data = {key: self.data_dict[key] for key in test_folders}
         val_data = {key: self.data_dict[key] for key in val_folders}
 
+        # save in a json file
+        with open(path, "w") as fp:
+            json.dump(
+                {"train": train_data, "test": test_data, "val": val_data}, fp
+            )
+
         return train_data, test_data, val_data
+
+    def load_random_train_test_split(self, path: str = "data_split.json"):
+        with open(path, "r") as f:
+            data = json.load(f)
+        return data["train"], data["test"], data["val"]

@@ -18,7 +18,9 @@ class TrainerModule(L.LightningModule):
         elif self.config["model"]["type"] == "seq2seq":
             self.e2e_model = Seq2SeqModel(config, state_size, action_size)
         else:
-            raise ValueError(f"Invalid model type: {self.config['model']['type']}")
+            raise ValueError(
+                f"Invalid model type: {self.config['model']['type']}"
+            )
         self.mse = tm.MeanSquaredError()
         self.mae = tm.MeanAbsoluteError()
         self.mape = tm.MeanAbsolutePercentageError()
@@ -37,7 +39,9 @@ class TrainerModule(L.LightningModule):
     def train_loss(self, predictions, targets):
         if self.config["train"]["loss"] == "mse":
             return nn.MSELoss()(predictions, targets)
-        raise ValueError(f"Invalid loss function: {self.config['train']['loss']}")
+        raise ValueError(
+            f"Invalid loss function: {self.config['train']['loss']}"
+        )
 
     def compute_metrics(self, predictions, targets, prefix: str = ""):
         mse = self.mse(predictions, targets)
@@ -56,11 +60,16 @@ class TrainerModule(L.LightningModule):
         state = batch["state"].float()
         actions = batch["action_horizon"].float()
         targets = batch["ground_truth"].float()
+        traversability_cost = batch["traversability_cost"].float()
+        wheel_rpm = batch["wheel_rpm"].float()
+        print(f"{traversability_cost.shape=} {wheel_rpm.shape=}")
         predictions = self.forward(state, actions)
         loss = self.train_loss(predictions, targets)
 
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        train_metrics = self.compute_metrics(predictions, targets, prefix="train")
+        train_metrics = self.compute_metrics(
+            predictions, targets, prefix="train"
+        )
         for metric_name, metric_val in train_metrics.items():
             self.log(
                 metric_name,

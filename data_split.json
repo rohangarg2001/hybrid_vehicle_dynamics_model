@@ -1,0 +1,80 @@
+{
+    "train": {
+        "2023-10-26-14-42-35_turnpike_afternoon_fall": {
+            "traversability_cost": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/traversability_cost/float.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/traversability_cost/timestamps.txt"
+            },
+            "super_odom": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/super_odom/odometry.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/super_odom/timestamps.txt"
+            },
+            "cmd": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/cmd/twist.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/cmd/timestamps.txt"
+            },
+            "wheel_rpm": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/wheel_rpm/encoder.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/wheel_rpm/timestamps.txt"
+            }
+        },
+        "2023-11-14-14-24-21_gupta": {
+            "traversability_cost": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/traversability_cost/float.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/traversability_cost/timestamps.txt"
+            },
+            "super_odom": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/super_odom/odometry.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/super_odom/timestamps.txt"
+            },
+            "cmd": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/cmd/twist.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/cmd/timestamps.txt"
+            },
+            "wheel_rpm": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/wheel_rpm/encoder.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/wheel_rpm/timestamps.txt"
+            }
+        }
+    },
+    "test": {
+        "figure_8_2023-09-13-17-23-35": {
+            "traversability_cost": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/traversability_cost/float.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/traversability_cost/timestamps.txt"
+            },
+            "super_odom": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/super_odom/odometry.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/super_odom/timestamps.txt"
+            },
+            "cmd": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/cmd/twist.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/cmd/timestamps.txt"
+            },
+            "wheel_rpm": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/wheel_rpm/encoder.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/wheel_rpm/timestamps.txt"
+            }
+        }
+    },
+    "val": {
+        "2023-11-02-16-00-43_down_meadows": {
+            "traversability_cost": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/traversability_cost/float.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/traversability_cost/timestamps.txt"
+            },
+            "super_odom": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/super_odom/odometry.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/super_odom/timestamps.txt"
+            },
+            "cmd": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/cmd/twist.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/cmd/timestamps.txt"
+            },
+            "wheel_rpm": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/wheel_rpm/encoder.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/wheel_rpm/timestamps.txt"
+            }
+        }
+    }
+}
