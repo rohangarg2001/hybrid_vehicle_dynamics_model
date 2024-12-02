@@ -25,16 +25,17 @@ class TrainerModule(L.LightningModule):
         self.mae = tm.MeanAbsoluteError()
         self.mape = tm.MeanAbsolutePercentageError()
 
-    def forward(self, state, actions):
+    def forward(self, state, actions, traversability_cost, wheel_rpm):
         """
         Args:
             state (torch.Tensor): The input state at time t, shape (B, state_size).
             actions (torch.Tensor): The actions input from time t to t+T, shape (B, T, action_size).
-
+            traversability_cost (torch.Tensor): The traversability cost input from time t to t+T, shape (B, T, 1).
+            wheel_rpm (torch.Tensor): The wheel rpm input from time t to t+T, shape (B, T, 4).
         Returns:
             torch.Tensor: The predicted states from t+1 to t+T+1, shape (B, T, state_size).
         """
-        return self.e2e_model(state, actions)
+        return self.e2e_model(state, actions, traversability_cost, wheel_rpm)
 
     def train_loss(self, predictions, targets):
         if self.config["train"]["loss"] == "mse":
@@ -62,8 +63,10 @@ class TrainerModule(L.LightningModule):
         targets = batch["ground_truth"].float()
         traversability_cost = batch["traversability_cost"].float()
         wheel_rpm = batch["wheel_rpm"].float()
-        print(f"{traversability_cost.shape=} {wheel_rpm.shape=}")
-        predictions = self.forward(state, actions)
+
+        predictions = self.forward(
+            state, actions, traversability_cost, wheel_rpm
+        )
         loss = self.train_loss(predictions, targets)
 
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
@@ -84,7 +87,12 @@ class TrainerModule(L.LightningModule):
         state = batch["state"].float()
         actions = batch["action_horizon"].float()
         targets = batch["ground_truth"].float()
-        predictions = self.forward(state, actions)
+        traversability_cost = batch["traversability_cost"].float()
+        wheel_rpm = batch["wheel_rpm"].float()
+
+        predictions = self.forward(
+            state, actions, traversability_cost, wheel_rpm
+        )
         loss = self.train_loss(predictions, targets)
 
         self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
@@ -102,7 +110,12 @@ class TrainerModule(L.LightningModule):
         state = batch["state"].float()
         actions = batch["action_horizon"].float()
         targets = batch["ground_truth"].float()
-        predictions = self.forward(state, actions)
+        traversability_cost = batch["traversability_cost"].float()
+        wheel_rpm = batch["wheel_rpm"].float()
+
+        predictions = self.forward(
+            state, actions, traversability_cost, wheel_rpm
+        )
         loss = self.train_loss(predictions, targets)
 
         self.log("test_loss", loss, on_step=True, on_epoch=True, prog_bar=True)

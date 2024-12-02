@@ -18,7 +18,10 @@ def visualize(model, loader, title: str):
     state = batch["state"].float()
     actions = batch["action_horizon"].float()
     targets = batch["ground_truth"].float()
-    predictions = model(state, actions)
+    traversability_cost = batch["traversability_cost"].float()
+    wheel_rpm = batch["wheel_rpm"].float()
+
+    predictions = model.forward(state, actions, traversability_cost, wheel_rpm)
     # plot random sample from batch
     idx = np.random.randint(0, state.shape[0])
     target_xyz = targets[idx, :, :3].detach().cpu().numpy()

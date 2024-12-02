@@ -8,7 +8,14 @@ class SimpleMLP(nn.Module):
         self.config = config
         self.state_size = state_size
         self.action_size = action_size
-        self.input_size = state_size + action_size
+        self.traversability_cost_size = 1
+        self.wheel_rpm_size = 4
+        self.input_size = (
+            self.state_size
+            + self.action_size
+            + self.traversability_cost_size
+            + self.wheel_rpm_size
+        )
         print(f"{self.input_size=}")
         hidden_dim = config["model"]["hidden_size"]
         self.num_layers = config["model"]["num_layers"]
@@ -20,13 +27,23 @@ class SimpleMLP(nn.Module):
             nn.Linear(hidden_dim, state_size),
         )
 
-    def forward(self, state, actions):
+    def forward(self, state, actions, traversability_cost, wheel_rpm):
         B, S = state.shape
         B, T, _ = actions.shape
         predictions = torch.zeros(B, T, S).to(state.device)
         for t in range(T):
             input = (
-                torch.cat([state, actions[:, t, :]], dim=-1).float().to(state.device)
+                torch.cat(
+                    [
+                        state,
+                        actions[:, t, :],
+                        traversability_cost[:, t, :],
+                        wheel_rpm[:, t, :],
+                    ],
+                    dim=-1,
+                )
+                .float()
+                .to(state.device)
             )
             next_state = self.mlp(input)
             predictions[:, t, :] = next_state
