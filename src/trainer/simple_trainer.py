@@ -38,22 +38,25 @@ class TrainerModule(L.LightningModule):
         return self.e2e_model(state, actions, traversability_cost, wheel_rpm)
 
     def train_loss(self, predictions, targets):
+        _, T, _ = predictions.shape
         if self.config["train"]["loss"] == "mse":
-            return nn.MSELoss()(predictions, targets)
+            return nn.MSELoss()(predictions, targets) / T
         raise ValueError(
             f"Invalid loss function: {self.config['train']['loss']}"
         )
 
     def compute_metrics(self, predictions, targets, prefix: str = ""):
-        mse = self.mse(predictions, targets)
-        mae = self.mae(predictions, targets)
-        mape = self.mape(predictions, targets)
+        _, T, _ = predictions.shape
+        mse = self.mse(predictions, targets) / T
+        mae = self.mae(predictions, targets) / T
+        mape = self.mape(predictions, targets) / T
+        rmse = torch.sqrt(mse)
         # r2 = self.r2(predictions, targets)
         return {
-            f"{prefix}_mse": mse,
-            f"{prefix}_mae": mae,
-            f"{prefix}_mape": mape,
-            # f"{prefix}_r2": r2,
+            f"{prefix}_normalized_mse": mse,
+            f"{prefix}_normalized_mae": mae,
+            f"{prefix}_normalized_mape": mape,
+            f"{prefix}_normalized_rmse": rmse,
         }
 
     def training_step(self, batch, batch_idx):

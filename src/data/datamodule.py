@@ -10,7 +10,7 @@ class DyanmicsDataset(Dataset):
         self,
         config,
         data_dict=Dict[str, Dict[str, Dict[str, str]]],
-        is_train=False,
+        ds_type="train",
     ):
         self.config = config
         self.modalities = config["data"]["modalities"].keys()
@@ -19,9 +19,9 @@ class DyanmicsDataset(Dataset):
         self.modality_processed_data = {key: [] for key in self.modalities}
         self.processed_state = None
         self.data_dict = data_dict
-        self.is_train = is_train
+        self.is_train = ds_type == "train"
         self.dt = self.config["data"]["dt"]
-        self.horizon = self.config["data"]["horizon"]
+        self.horizon = self.config["data"]["horizon_seconds"][ds_type]
         self.load_data()
 
     def load_data(self):
@@ -40,6 +40,9 @@ class DyanmicsDataset(Dataset):
                 self.timestamp_file_list_data[modality].append(timestamps)
 
         # Todo: Do we need timestamps???
+        self.processed_state = []
+        self.ground_truth = []
+        self.action_over_horizon = []
         for modality in self.modalities:
             samples_in_window = int(
                 self.dt
@@ -54,22 +57,51 @@ class DyanmicsDataset(Dataset):
                 ].reshape(-1, samples_in_window, k)
                 averaged_data = reshaped_data.mean(axis=1)
                 self.modality_processed_data[modality].append(averaged_data)
-            self.modality_processed_data[modality] = np.vstack(
-                self.modality_processed_data[modality]
-            )
-        self.processed_state = self.construct_state()
-        print(f"{self.processed_state.shape=}")
 
-    def construct_state(self):
-        base_state = self.modality_processed_data["super_odom"]  # (N, 13)
+        for modality in self.modalities:
+            if self.config["data"]["modalities"][modality]["type"] == "state":
+                for instance_state, instance_cmd in zip(
+                    self.modality_processed_data[modality],
+                    self.modality_processed_data["cmd"],
+                ):
+                    processed_state = self.construct_state(instance_state, instance_cmd)            
+                    ground_truth = np.stack(
+                        [
+                            processed_state[idx + 1 : idx + 1 + self.horizon_rows]
+                            for idx in range(
+                                processed_state.shape[0] - self.horizon_rows-1
+                            )
+                        ],
+                    )
+                    self.processed_state.append(processed_state)
+                    self.ground_truth.append(ground_truth)
+                self.processed_state = np.vstack(self.processed_state)
+                self.ground_truth = np.concatenate(self.ground_truth)
+            elif self.config["data"]["modalities"][modality]["type"] == "action":
+                for instance_actions in self.modality_processed_data[modality]:
+                    action_over_horizon = np.stack(
+                        [
+                            instance_actions[idx : idx + self.horizon_rows]
+                            for idx in range(
+                                instance_actions.shape[0] - self.horizon_rows
+                            )
+                        ],
+                    )
+                    self.action_over_horizon.append(action_over_horizon)
+                self.action_over_horizon = np.concatenate(self.action_over_horizon)
+            else:
+                self.modality_processed_data[modality] = np.vstack(
+                    self.modality_processed_data[modality]
+                )
+
+    def construct_state(self, base_state, cmds):
+        # base_state: (N, 13)
         # 4th 5th 6th 7th columns of base_state is quaternion convert it to rotation matrix for each sample
         rot_matrix = R.from_quat(base_state[:, 3:7]).as_matrix()
         # convert rotation matrix to 6D representation
         rot_6 = rot_matrix[:, :, [0, 1]].reshape(base_state.shape[0], -1)
         print(f"{rot_6.shape=}")
-        steering_angle = self.modality_processed_data["cmd"][:, 1].reshape(
-            -1, 1
-        )  # (N, 1) instead of (N,)
+        steering_angle = cmds[:, 1].reshape(-1, 1)  # (N, 1) instead of (N,)
         # tranform wheel angle to steering angle
         transformed_steering_angle = (
             steering_angle * (30.0 / 415.0) * (-np.pi / 180.0)
@@ -90,27 +122,16 @@ class DyanmicsDataset(Dataset):
         return np.ceil(self.horizon / self.dt).astype(int)
 
     def __len__(self):
-        return (
-            self.processed_state.shape[0] - self.horizon_rows - 1
-        )  # no of datapoints for each modality is now the same
+        return self.ground_truth.shape[0]
 
     def __getitem__(self, idx):
         current_state = self.processed_state[idx]
+        ground_truth = self.ground_truth[idx]
+        action_horizon = self.action_over_horizon[idx]
         environment = {}  # rgb etc?
-        ground_truth = self.processed_state[
-            idx + 1 : idx + 1 + (self.horizon_rows)
-        ]
-        action_horizon = None
         for modality in self.modalities:
-            if (
-                self.config["data"]["modalities"][modality]["type"]
-                == "environment"
-            ):
+            if self.config["data"]["modalities"][modality]["type"] == "environment":
                 environment[modality] = self.modality_processed_data[modality][
-                    idx : idx + (self.horizon_rows)
-                ]
-            if self.config["data"]["modalities"][modality]["type"] == "action":
-                action_horizon = self.modality_processed_data[modality][
                     idx : idx + (self.horizon_rows)
                 ]
         return {
