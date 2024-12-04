@@ -20,8 +20,11 @@ def visualize(model, loader, title: str):
     targets = batch["ground_truth"].float()
     traversability_cost = batch["traversability_cost"].float()
     wheel_rpm = batch["wheel_rpm"].float()
+    traversability_breakdown = batch["traversability_breakdown"].float()
 
-    predictions = model.forward(state, actions, traversability_cost, wheel_rpm)
+    predictions = model.forward(
+        state, actions, traversability_cost, traversability_breakdown, wheel_rpm
+    )
     # plot random sample from batch
     idx = np.random.randint(0, state.shape[0])
     target_xyz = targets[idx, :, :3].detach().cpu().numpy()
@@ -78,8 +81,18 @@ def run_experiment():
     )
 
     train_dataset = DyanmicsDataset(config, data_train, "train")
-    test_dataset = DyanmicsDataset(config, data_test, "test")
-    val_dataset = DyanmicsDataset(config, data_val, "val")
+    test_dataset = DyanmicsDataset(
+        config,
+        data_test,
+        "test",
+        normalization_stats=train_dataset.normalization_stats,
+    )
+    val_dataset = DyanmicsDataset(
+        config,
+        data_val,
+        "val",
+        normalization_stats=train_dataset.normalization_stats,
+    )
     print(f"{len(train_dataset)=}")
     print(f"{len(test_dataset)=}")
     print(f"{len(val_dataset)=}")

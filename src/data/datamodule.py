@@ -11,6 +11,7 @@ class DyanmicsDataset(Dataset):
         config,
         data_dict=Dict[str, Dict[str, Dict[str, str]]],
         ds_type="train",
+        normalization_stats=None,
     ):
         self.config = config
         self.modalities = config["data"]["modalities"].keys()
@@ -22,6 +23,11 @@ class DyanmicsDataset(Dataset):
         self.is_train = ds_type == "train"
         self.dt = self.config["data"]["dt"]
         self.horizon = self.config["data"]["horizon_seconds"][ds_type]
+        self.processed_state = []
+        self.ground_truth = []
+        self.action_over_horizon = []
+        self.envs_over_horizon = {}
+        self.normalization_stats = normalization_stats
         self.load_data()
 
     def load_data(self):
@@ -40,9 +46,6 @@ class DyanmicsDataset(Dataset):
                 self.timestamp_file_list_data[modality].append(timestamps)
 
         # Todo: Do we need timestamps???
-        self.processed_state = []
-        self.ground_truth = []
-        self.action_over_horizon = []
         for modality in self.modalities:
             samples_in_window = int(
                 self.dt
@@ -64,12 +67,16 @@ class DyanmicsDataset(Dataset):
                     self.modality_processed_data[modality],
                     self.modality_processed_data["cmd"],
                 ):
-                    processed_state = self.construct_state(instance_state, instance_cmd)            
+                    processed_state = self.construct_state(
+                        instance_state, instance_cmd
+                    )
                     ground_truth = np.stack(
                         [
-                            processed_state[idx + 1 : idx + 1 + self.horizon_rows]
+                            processed_state[
+                                idx + 1 : idx + 1 + self.horizon_rows
+                            ]
                             for idx in range(
-                                processed_state.shape[0] - self.horizon_rows-1
+                                processed_state.shape[0] - self.horizon_rows - 1
                             )
                         ],
                     )
@@ -77,7 +84,9 @@ class DyanmicsDataset(Dataset):
                     self.ground_truth.append(ground_truth)
                 self.processed_state = np.vstack(self.processed_state)
                 self.ground_truth = np.concatenate(self.ground_truth)
-            elif self.config["data"]["modalities"][modality]["type"] == "action":
+            elif (
+                self.config["data"]["modalities"][modality]["type"] == "action"
+            ):
                 for instance_actions in self.modality_processed_data[modality]:
                     action_over_horizon = np.stack(
                         [
@@ -88,11 +97,69 @@ class DyanmicsDataset(Dataset):
                         ],
                     )
                     self.action_over_horizon.append(action_over_horizon)
-                self.action_over_horizon = np.concatenate(self.action_over_horizon)
-            else:
-                self.modality_processed_data[modality] = np.vstack(
-                    self.modality_processed_data[modality]
+                self.action_over_horizon = np.concatenate(
+                    self.action_over_horizon
                 )
+            else:
+                self.envs_over_horizon[modality] = []
+                for env_modality in self.modality_processed_data[modality]:
+                    env_over_horizon = np.stack(
+                        [
+                            env_modality[idx : idx + self.horizon_rows]
+                            for idx in range(
+                                env_modality.shape[0] - self.horizon_rows
+                            )
+                        ],
+                    )
+                    self.envs_over_horizon[modality].append(env_over_horizon)
+                self.envs_over_horizon[modality] = np.concatenate(
+                    self.envs_over_horizon[modality]
+                )
+
+        if self.is_train and self.normalization_stats is None:
+            self.normalization_stats = self.get_normalization_stats()
+
+        self.normalize_data()
+
+    def get_normalization_stats(self):
+        # calculate mean and std for each column of processed state
+        mean = np.mean(self.processed_state, axis=0)
+        std = np.std(self.processed_state, axis=0)
+        # calculate mean and std for env modalities
+        env_means = {}
+        env_stds = {}
+        for modality in self.envs_over_horizon:
+            env_means[modality] = np.mean(self.envs_over_horizon[modality])
+            env_stds[modality] = np.std(self.envs_over_horizon[modality])
+        action_mean = np.mean(self.action_over_horizon)
+        action_std = np.std(self.action_over_horizon)
+        return {
+            "mean": mean,
+            "std": std,
+            "env_means": env_means,
+            "env_stds": env_stds,
+            "action_mean": action_mean,
+            "action_std": action_std,
+        }
+
+    def normalize_data(self):
+        if self.normalization_stats is None:
+            print("Not normalizing data")
+            return
+        self.processed_state = (
+            self.processed_state - self.normalization_stats["mean"]
+        ) / self.normalization_stats["std"]
+        self.ground_truth = (
+            self.ground_truth - self.normalization_stats["mean"]
+        ) / self.normalization_stats["std"]
+        self.action_over_horizon = (
+            self.action_over_horizon - self.normalization_stats["action_mean"]
+        ) / self.normalization_stats["action_std"]
+        for modality in self.envs_over_horizon:
+            self.envs_over_horizon[modality] = (
+                self.envs_over_horizon[modality]
+                - self.normalization_stats["env_means"][modality]
+            ) / self.normalization_stats["env_stds"][modality]
 
     def construct_state(self, base_state, cmds):
         # base_state: (N, 13)
@@ -128,12 +195,10 @@ class DyanmicsDataset(Dataset):
         current_state = self.processed_state[idx]
         ground_truth = self.ground_truth[idx]
         action_horizon = self.action_over_horizon[idx]
-        environment = {}  # rgb etc?
-        for modality in self.modalities:
-            if self.config["data"]["modalities"][modality]["type"] == "environment":
-                environment[modality] = self.modality_processed_data[modality][
-                    idx : idx + (self.horizon_rows)
-                ]
+        environment = {
+            modality: self.envs_over_horizon[modality][idx]
+            for modality in self.envs_over_horizon
+        }
         return {
             "state": current_state,
             **environment,

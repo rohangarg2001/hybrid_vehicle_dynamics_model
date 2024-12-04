@@ -1,6 +1,10 @@
 {
     "train": {
         "2023-10-26-14-42-35_turnpike_afternoon_fall": {
+            "traversability_breakdown": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/traversability_breakdown/float.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/traversability_breakdown/timestamps.txt"
+            },
             "traversability_cost": {
                 "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/traversability_cost/float.npy",
                 "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-10-26-14-42-35_turnpike_afternoon_fall/traversability_cost/timestamps.txt"
@@ -19,6 +23,10 @@
             }
         },
         "2023-11-14-14-24-21_gupta": {
+            "traversability_breakdown": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/traversability_breakdown/float.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/traversability_breakdown/timestamps.txt"
+            },
             "traversability_cost": {
                 "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/traversability_cost/float.npy",
                 "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-14-14-24-21_gupta/traversability_cost/timestamps.txt"
@@ -39,6 +47,10 @@
     },
     "test": {
         "figure_8_2023-09-13-17-23-35": {
+            "traversability_breakdown": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/traversability_breakdown/float.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/traversability_breakdown/timestamps.txt"
+            },
             "traversability_cost": {
                 "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/traversability_cost/float.npy",
                 "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/figure_8_2023-09-13-17-23-35/traversability_cost/timestamps.txt"
@@ -59,6 +71,10 @@
     },
     "val": {
         "2023-11-02-16-00-43_down_meadows": {
+            "traversability_breakdown": {
+                "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/traversability_breakdown/float.npy",
+                "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/traversability_breakdown/timestamps.txt"
+            },
             "traversability_cost": {
                 "data": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/traversability_cost/float.npy",
                 "timestamp": "/home/bakkarlord/Documents/fall2024/229/project/hybrid_vehicle_dynamics_model/debug_dataset/2023-11-02-16-00-43_down_meadows/traversability_cost/timestamps.txt"

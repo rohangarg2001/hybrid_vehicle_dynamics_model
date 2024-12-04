@@ -21,6 +21,10 @@ data:
             type: environment
             frequency: 100
             description: "Traversability Cost"
+        traversability_breakdown:
+            type: environment
+            frequency: 100
+            description: "Traversability Breakdown"
         wheel_rpm:
             type: environment
             frequency: 50
