@@ -3,14 +3,24 @@ from torch import nn
 
 
 class SimpleMLP(nn.Module):
-    def __init__(self, config, state_size, action_size):
+    def __init__(
+        self,
+        config,
+        state_size,
+        action_size,
+        traversability_cost_size=1,
+        traversasbility_breakdown_size=8,
+        wheel_rpm_size=4,
+        H=240,
+        W=600,
+    ):
         super().__init__()
         self.config = config
         self.state_size = state_size
         self.action_size = action_size
-        self.traversability_cost_size = 1
-        self.traversasbility_breakdown_size = 8
-        self.wheel_rpm_size = 4
+        self.traversability_cost_size = traversability_cost_size
+        self.traversasbility_breakdown_size = traversasbility_breakdown_size
+        self.wheel_rpm_size = wheel_rpm_size
         self.input_size = (
             self.state_size
             + self.action_size
@@ -35,6 +45,8 @@ class SimpleMLP(nn.Module):
         traversability_cost,
         traversability_breakdown,
         wheel_rpm,
+        heightmap,
+        rgbmap,
     ):
         B, S = state.shape
         B, T, _ = actions.shape

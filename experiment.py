@@ -21,9 +21,17 @@ def visualize(model, loader, title: str):
     traversability_cost = batch["traversability_cost"].float()
     wheel_rpm = batch["wheel_rpm"].float()
     traversability_breakdown = batch["traversability_breakdown"].float()
+    height_map = batch["height_map"].float()
+    rgb_map = batch["rgb_map"].float()
 
     predictions = model.forward(
-        state, actions, traversability_cost, traversability_breakdown, wheel_rpm
+        state,
+        actions,
+        traversability_cost,
+        traversability_breakdown,
+        wheel_rpm,
+        height_map,
+        rgb_map,
     )
     # plot random sample from batch
     idx = np.random.randint(0, state.shape[0])
@@ -100,7 +108,14 @@ def run_experiment():
     test_loader = test_dataset.get_dataloader()
     val_loader = val_dataset.get_dataloader()
     model = TrainerModule(
-        config, 16, 2
+        config=config,
+        state_size=16,
+        action_size=2,
+        cost_size=1,
+        breakdown_size=8,
+        rpm_size=4,
+        H=240,
+        W=600,
     )  # remove hardcoding, wrap this in a class
     wandb_logger = WandbLogger(project="229-project")
     trainer = pl.Trainer(

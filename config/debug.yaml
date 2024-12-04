@@ -31,16 +31,19 @@ data:
             description: "Wheel RPM"
 
 train:
-    batch_size: 32
+    batch_size: 64
     max_epochs: 12
-    learning_rate: 0.001
+    learning_rate: 0.0001
     optimizer: "adam"
     loss: "mse"
     train_split: 0.5
     accuracy: "mse"
+
 model:
     type: "simple_mlp" # "seq2seq"
     hidden_size: 128
     num_layers: 2
+    nhead: 4
+
 seed: 4
 fast_dev_run: False

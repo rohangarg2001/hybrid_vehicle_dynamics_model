@@ -87,19 +87,19 @@ class LatentTransformer(nn.Module):
 class AutoregressiveTransformerModel(nn.Module):
     def __init__(
         self,
+        config,
         state_size,
         action_size,
         cost_size,
         breakdown_size,
         rpm_size,
-        H,
-        W,
-        hidden_size,
-        nhead,
-        num_layers,
-        T,
+        H=240,
+        W=600,
     ):
         super(AutoregressiveTransformerModel, self).__init__()
+        hidden_size = config["model"]["hidden_size"]
+        nhead = config["model"]["nhead"]
+        num_layers = config["model"]["num_layers"]
 
         self.state_encoder = StateEncoder(state_size, hidden_size)
         self.action_encoder = ActionEncoder(action_size, hidden_size)
@@ -116,7 +116,6 @@ class AutoregressiveTransformerModel(nn.Module):
             latent_size, hidden_size, nhead, num_layers
         )
         self.fc_out = nn.Linear(hidden_size, state_size)
-        self.T = T
 
     def forward(
         self,

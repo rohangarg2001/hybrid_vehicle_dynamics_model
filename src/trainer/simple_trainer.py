@@ -8,15 +8,43 @@ from src.models.SimpleMLP import SimpleMLP
 
 
 class TrainerModule(L.LightningModule):
-    def __init__(self, config, state_size, action_size):
+    def __init__(
+        self,
+        config,
+        state_size,
+        action_size,
+        cost_size,
+        breakdown_size,
+        rpm_size,
+        H,
+        W,
+    ):
         super().__init__()
         self.config = config
 
         self.e2e_model = None
         if self.config["model"]["type"] == "simple_mlp":
-            self.e2e_model = SimpleMLP(config, state_size, action_size)
+            self.e2e_model = SimpleMLP(
+                config,
+                state_size,
+                action_size,
+                cost_size,
+                breakdown_size,
+                rpm_size,
+                H,
+                W,
+            )
         elif self.config["model"]["type"] == "seq2seq":
-            self.e2e_model = Seq2SeqModel(config, state_size, action_size)
+            self.e2e_model = Seq2SeqModel(
+                config,
+                state_size,
+                action_size,
+                cost_size,
+                breakdown_size,
+                rpm_size,
+                H,
+                W,
+            )
         else:
             raise ValueError(
                 f"Invalid model type: {self.config['model']['type']}"
@@ -53,6 +81,8 @@ class TrainerModule(L.LightningModule):
             traversability_cost,
             traversability_breakdown,
             wheel_rpm,
+            heightmap,
+            rgbmap,
         )
 
     def train_loss(self, predictions, targets):
@@ -85,6 +115,8 @@ class TrainerModule(L.LightningModule):
         traversability_cost = batch["traversability_cost"].float()
         wheel_rpm = batch["wheel_rpm"].float()
         traversability_breakdown = batch["traversability_breakdown"].float()
+        height_map = batch["height_map"].float()
+        rgb_map = batch["rgb_map"].float()
 
         predictions = self.forward(
             state,
@@ -92,6 +124,8 @@ class TrainerModule(L.LightningModule):
             traversability_cost,
             traversability_breakdown,
             wheel_rpm,
+            height_map,
+            rgb_map,
         )
         loss = self.train_loss(predictions, targets)
 
@@ -116,6 +150,8 @@ class TrainerModule(L.LightningModule):
         traversability_cost = batch["traversability_cost"].float()
         wheel_rpm = batch["wheel_rpm"].float()
         traversability_breakdown = batch["traversability_breakdown"].float()
+        height_map = batch["height_map"].float()
+        rgb_map = batch["rgb_map"].float()
 
         predictions = self.forward(
             state,
@@ -123,6 +159,8 @@ class TrainerModule(L.LightningModule):
             traversability_cost,
             traversability_breakdown,
             wheel_rpm,
+            height_map,
+            rgb_map,
         )
         loss = self.train_loss(predictions, targets)
 
@@ -144,6 +182,8 @@ class TrainerModule(L.LightningModule):
         traversability_cost = batch["traversability_cost"].float()
         wheel_rpm = batch["wheel_rpm"].float()
         traversability_breakdown = batch["traversability_breakdown"].float()
+        height_map = batch["height_map"].float()
+        rgb_map = batch["rgb_map"].float()
 
         predictions = self.forward(
             state,
@@ -151,6 +191,8 @@ class TrainerModule(L.LightningModule):
             traversability_cost,
             traversability_breakdown,
             wheel_rpm,
+            height_map,
+            rgb_map,
         )
         loss = self.train_loss(predictions, targets)
 
