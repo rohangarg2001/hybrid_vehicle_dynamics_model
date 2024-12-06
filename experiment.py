@@ -83,6 +83,11 @@ def run_experiment():
     # )
     # split into train val test
     # data_class.random_train_test_split(config["train"]["train_split"], config["data"]["dataset_split_path"])
+    # data_class.rebalance_and_filter_split(
+    #     path=config["data"]["dataset_split_path"],
+    #     modalities=list(config["data"]["modalities"].keys()),
+    # )
+    # exit(0)
 
     data_train, data_test, data_val = data_class.load_random_train_test_split(
         config["data"]["dataset_split_path"]
@@ -101,9 +106,9 @@ def run_experiment():
         "val",
         normalization_stats=train_dataset.normalization_stats,
     )
-    print(f"{len(train_dataset)=}")
-    print(f"{len(test_dataset)=}")
-    print(f"{len(val_dataset)=}")
+    # print(f"{len(train_dataset)=}")
+    # print(f"{len(test_dataset)=}")
+    # print(f"{len(val_dataset)=}")
     train_loader = train_dataset.get_dataloader()
     test_loader = test_dataset.get_dataloader()
     val_loader = val_dataset.get_dataloader()

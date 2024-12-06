@@ -1,7 +1,8 @@
 import json
 import math
 import os
-
+from pathlib import Path
+from typing import List
 import numpy as np
 
 
@@ -26,23 +27,31 @@ class DataSplitUtils:
         """
         for folder_name in self.data_dict:
             self.data_dict[folder_name] = {}
-        for dirs, _, files in os.walk(self.dataset_path):
-            for file in files:
-                if file.endswith(".npy"):
-                    path = os.path.join(dirs, file)
-                    seperated_path = path.split("/")
-                    if seperated_path[-2] in modalities:
-                        self.data_dict[seperated_path[1]][
-                            seperated_path[2]
-                        ] = {}
-                        self.data_dict[seperated_path[1]][seperated_path[2]][
-                            "data"
-                        ] = os.path.abspath(path)
-                        self.data_dict[seperated_path[1]][seperated_path[2]][
-                            "timestamp"
-                        ] = os.path.abspath(
-                            os.path.join(dirs, "timestamps.txt")
-                        )
+
+        base_path = Path(self.dataset_path)
+
+        for trajectory_instance in base_path.iterdir():
+            if not trajectory_instance.is_dir():
+                continue
+            print(f"Processing {trajectory_instance.name}")
+            for modality in modalities:
+                modality_path = trajectory_instance / modality
+                timestamp_path = modality_path / "timestamps.txt"
+                if not modality_path.is_dir():
+                    continue
+                if not timestamp_path.is_file():
+                    continue
+                print(f"\tProcessing {modality_path}")
+                data_files = [
+                    f.name
+                    for f in modality_path.iterdir()
+                    if f.name != "timestamps.txt" and f.is_file()
+                ]
+                self.data_dict[trajectory_instance.name][modality] = {
+                    "data": data_files,
+                    "timestamp": str(timestamp_path),
+                }
+
         return self.data_dict
 
     def random_train_test_split(self, test_size, path: str = "data_split.json"):
@@ -75,9 +84,7 @@ class DataSplitUtils:
 
         # save in a json file
         with open(path, "w") as fp:
-            json.dump(
-                {"train": train_data, "test": test_data, "val": val_data}, fp
-            )
+            json.dump({"train": train_data, "test": test_data, "val": val_data}, fp)
 
         return train_data, test_data, val_data
 
@@ -85,3 +92,60 @@ class DataSplitUtils:
         with open(path, "r") as f:
             data = json.load(f)
         return data["train"], data["test"], data["val"]
+
+    def rebalance_and_filter_split(
+        self,
+        path: str,
+        modalities: List[str],
+        old_split: str = "data_split_full_raw.json",
+        test_size: float = 0.2,
+    ):
+        with open(old_split, "r") as f:
+            raw_data_split = json.load(f)
+        raw_data_total = {
+            **raw_data_split["train"],
+            **raw_data_split["test"],
+            **raw_data_split["val"],
+        }
+        # filter out entries which dont have all modalities
+        filtered_data = {}
+        for traj, data in raw_data_total.items():
+            if all(modality in data.keys() for modality in modalities):
+                filtered_data[traj] = data
+        print(f"Filtered out {len(raw_data_total) - len(filtered_data)} trajectories")
+        # length of filtered_data[traj]["data"] is the length of the trajectory
+        # use this length to split into train test val sets, each traj should be part of only one set
+
+        traj_list = list(filtered_data.keys())
+        np.random.shuffle(traj_list)
+        train_data = {}
+        test_data = {}
+        val_data = {}
+        total_length = 0
+        for traj in traj_list:
+            total_length += len(filtered_data[traj]["height_map_12x12"]["data"])
+        cur_train_length = 0
+        cur_val_length = 0
+        cur_test_length = 0
+        max_train_length = total_length * (1 - test_size)
+        max_val_length = total_length * test_size / 2
+        for i, traj in enumerate(traj_list):
+            traj_length = len(filtered_data[traj]["height_map_12x12"]["data"])
+            if cur_train_length + traj_length <= max_train_length:
+                train_data[traj] = filtered_data[traj]
+                cur_train_length += traj_length
+            elif cur_val_length + traj_length <= max_val_length:
+                val_data[traj] = filtered_data[traj]
+                cur_val_length += traj_length
+            else:
+                test_data[traj] = filtered_data[traj]
+                cur_test_length += traj_length
+        print(f"Train set length: {cur_train_length}")
+        print(f"Val set length: {cur_val_length}")
+        print(f"Test set length: {cur_test_length}")
+        print(f"Total length: {total_length}")
+        print(f"Number of train trajectories: {len(train_data)}")
+        print(f"Number of val trajectories: {len(val_data)}")
+        print(f"Number of test trajectories: {len(test_data)}")
+        with open(path, "w") as fp:
+            json.dump({"train": train_data, "test": test_data, "val": val_data}, fp)

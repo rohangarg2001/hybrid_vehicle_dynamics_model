@@ -5,7 +5,7 @@ from torch import nn
 
 from src.models.Seq2SeqModel import Seq2SeqModel
 from src.models.SimpleMLP import SimpleMLP
-
+from src.models.transformer import AutoregressiveTransformerModel
 
 class TrainerModule(L.LightningModule):
     def __init__(
@@ -45,6 +45,17 @@ class TrainerModule(L.LightningModule):
                 H,
                 W,
             )
+        elif self.config["model"]["type"] == "transformer":
+            self.e2e_model = AutoregressiveTransformerModel(
+                config,
+                state_size,
+                action_size,
+                cost_size,
+                breakdown_size,
+                rpm_size,
+                H,
+                W,
+            )
         else:
             raise ValueError(
                 f"Invalid model type: {self.config['model']['type']}"
@@ -67,11 +78,11 @@ class TrainerModule(L.LightningModule):
         Args:
             state (torch.Tensor): The input state at time t, shape (B, state_size).
             actions (torch.Tensor): The actions input from time t to t+T, shape (B, T, action_size).
-            traversability_cost (torch.Tensor): The traversability cost input from time t to t+T, shape (B, T, 1).
-            traversability_breakdown (torch.Tensor): The traversability breakdown input from time t to t+T, shape (B, T, 8).
-            wheel_rpm (torch.Tensor): The wheel rpm input from time t to t+T, shape (B, T, 4).
-            heightmap (torch.Tensor): The heightmap input from time t to t+T, shape (B, H, W, 1).
-            rgbmap (torch.Tensor): The rgbmap input from time t to t+T, shape (B, H, W, 3).
+            traversability_cost (torch.Tensor): The traversability cost input from time t, shape (B, 1).
+            traversability_breakdown (torch.Tensor): The traversability breakdown input from time t, shape (B, 8).
+            wheel_rpm (torch.Tensor): The wheel rpm input from time t, shape (B, 4).
+            heightmap (torch.Tensor): The heightmap input from time t, shape (B, H, W, 4).
+            rgbmap (torch.Tensor): The rgbmap input from time t, shape (B, H, W, 3).
         Returns:
             torch.Tensor: The predicted states from t+1 to t+T+1, shape (B, T, state_size).
         """

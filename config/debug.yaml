@@ -1,6 +1,6 @@
 data:
-    dataset_path: "debug_dataset"
-    dataset_split_path: "data_split.json"
+    dataset_path: "/ocean/projects/cis220039p/shared/tartandrive/2023_traj/v1"
+    dataset_split_path: "data_split_full.json"
     # input_modalities: ["odom", "imu", ]
     # prediction: ["controls"]
     horizon_seconds:
@@ -29,21 +29,32 @@ data:
             type: environment
             frequency: 50
             description: "Wheel RPM"
+        height_map_12x12:
+            type: environment
+            frequency: 10
+            description: "Height Map 4 channel"
+        image_left_color:
+            type: environment
+            frequency: 10
+            description: "PNG Images from left camera"
+        
 
 train:
     batch_size: 64
-    max_epochs: 12
+    max_epochs: 10
     learning_rate: 0.0001
     optimizer: "adam"
     loss: "mse"
-    train_split: 0.5
+    train_split: 0.8
     accuracy: "mse"
 
 model:
-    type: "simple_mlp" # "seq2seq"
+    type: "transformer" # "simple_mlp"  "seq2seq"
     hidden_size: 128
     num_layers: 2
     nhead: 4
+    pretrained: True
+    use_decoder: False
 
 seed: 4
 fast_dev_run: False

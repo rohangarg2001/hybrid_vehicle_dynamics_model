@@ -50,38 +50,51 @@ class RPMEncoder(nn.Module):
 
 
 class HeightmapEncoder(nn.Module):
-    def __init__(self, pretrained=True):
+    def __init__(self, hidden_size, pretrained=True):
         super(HeightmapEncoder, self).__init__()
         resnet = resnet18(pretrained=pretrained)
         self.feature_extractor = nn.Sequential(*list(resnet.children())[:-1])
+        self.fc = nn.Linear(resnet.fc.in_features, hidden_size)
 
     def forward(self, x):
-        return self.feature_extractor(x)
+        x = self.feature_extractor(x)
+        return self.fc(x.view(x.size(0), -1))
 
 
 class RGBMapEncoder(nn.Module):
-    def __init__(self, pretrained=True):
+    def __init__(self, hidden_size, pretrained=True):
         super(RGBMapEncoder, self).__init__()
         resnet = resnet18(pretrained=pretrained)
         self.feature_extractor = nn.Sequential(*list(resnet.children())[:-1])
+        self.fc = nn.Linear(resnet.fc.in_features, hidden_size)
 
     def forward(self, x):
-        return self.feature_extractor(x)
+        x = self.feature_extractor(x)
+        return self.fc(x.view(x.size(0), -1))
 
 
-class LatentTransformer(nn.Module):
-    def __init__(self, input_size, hidden_size, nhead, num_layers):
-        super(LatentTransformer, self).__init__()
-        self.transformer = nn.Transformer(
-            d_model=input_size,
-            nhead=nhead,
-            num_encoder_layers=num_layers,
-            num_decoder_layers=num_layers,
-            dim_feedforward=hidden_size,
+class LatentTransformerEncoder(nn.Module):
+    def __init__(self, input_size, nhead, num_layers):
+        super(LatentTransformerEncoder, self).__init__()
+        self.encoder = nn.TransformerEncoder(
+            nn.TransformerEncoderLayer(d_model=input_size, nhead=nhead),
+            num_layers=num_layers,
         )
 
-    def forward(self, src, tgt):
-        return self.transformer(src, tgt)
+    def forward(self, src):
+        return self.encoder(src)
+
+
+class LatentTransformerDecoder(nn.Module):
+    def __init__(self, input_size, nhead, num_layers):
+        super(LatentTransformerDecoder, self).__init__()
+        self.decoder = nn.TransformerDecoder(
+            nn.TransformerDecoderLayer(d_model=input_size, nhead=nhead),
+            num_layers=num_layers,
+        )
+
+    def forward(self, tgt, memory):
+        return self.decoder(tgt, memory)
 
 
 class AutoregressiveTransformerModel(nn.Module):
@@ -97,25 +110,25 @@ class AutoregressiveTransformerModel(nn.Module):
         W=600,
     ):
         super(AutoregressiveTransformerModel, self).__init__()
-        hidden_size = config["model"]["hidden_size"]
-        nhead = config["model"]["nhead"]
-        num_layers = config["model"]["num_layers"]
+        self.hidden_size = config["model"]["hidden_size"]
+        self.nhead = config["model"]["nhead"]
+        self.num_layers = config["model"]["num_layers"]
+        self.pretrained = config["model"]["pretrained"]
+        self.use_decoder = config["model"]["use_decoder"]
 
-        self.state_encoder = StateEncoder(state_size, hidden_size)
-        self.action_encoder = ActionEncoder(action_size, hidden_size)
-        self.cost_encoder = CostEncoder(cost_size, hidden_size)
-        self.breakdown_encoder = BreakdownEncoder(breakdown_size, hidden_size)
-        self.rpm_encoder = RPMEncoder(rpm_size, hidden_size)
-        self.heightmap_encoder = HeightmapEncoder(pretrained=True, H=H, W=W)
-        self.rgbmap_encoder = RGBMapEncoder(pretrained=True, H=H, W=W)
+        self.state_encoder = StateEncoder(state_size, self.hidden_size)
+        self.action_encoder = ActionEncoder(action_size, self.hidden_size)
+        self.cost_encoder = CostEncoder(cost_size, self.hidden_size)
+        self.breakdown_encoder = BreakdownEncoder(breakdown_size, self.hidden_size)
+        self.rpm_encoder = RPMEncoder(rpm_size, self.hidden_size)
+        self.heightmap_encoder = HeightmapEncoder(self.hidden_size, pretrained=self.pretrained)
+        self.rgbmap_encoder = RGBMapEncoder(self.hidden_size, pretrained=self.pretrained)
 
-        latent_size = (
-            hidden_size * 8
-        )  # Case of concatenation of all latent sizes.
-        self.latent_transformer = LatentTransformer(
-            latent_size, hidden_size, nhead, num_layers
-        )
-        self.fc_out = nn.Linear(hidden_size, state_size)
+        self.latent_size = self.hidden_size * 8  # Adjust according to your design
+        self.latent_transformer_encoder = LatentTransformerEncoder(self.latent_size, self.nhead, self.num_layers)
+        if self.use_decoder:
+            self.latent_transformer_decoder = LatentTransformerDecoder(self.latent_size, self.nhead, self.num_layers)
+        self.fc_out = nn.Linear(self.latent_size, state_size)
 
     def forward(
         self,
@@ -130,45 +143,69 @@ class AutoregressiveTransformerModel(nn.Module):
         B, T, _ = actions.shape
 
         # Encode all inputs
-        encoded_state = self.state_encoder(state)
+        encoded_state = self.state_encoder(state)  # Shape (B, hidden_size)
         encoded_action = self.action_encoder(actions.view(B * T, -1)).view(
             B, T, -1
-        )
-        encoded_cost = self.cost_encoder(
-            traversability_cost.view(B * T, -1)
-        ).view(B, T, -1)
-        encoded_breakdown = self.breakdown_encoder(
-            traversability_breakdown.view(B * T, -1)
-        ).view(B, T, -1)
-        encoded_rpm = self.rpm_encoder(wheel_rpm.view(B * T, -1)).view(B, T, -1)
+        )  # Shape (B, T, hidden_size)
+        encoded_cost = (
+            self.cost_encoder(traversability_cost.view(B, -1))
+            .unsqueeze(1)
+            .expand(B, T, -1)
+        )  # Shape (B, T, hidden_size)
+        encoded_breakdown = (
+            self.breakdown_encoder(traversability_breakdown.view(B, -1))
+            .unsqueeze(1)
+            .expand(B, T, -1)
+        )  # Shape (B, T, hidden_size)
+        encoded_rpm = (
+            self.rpm_encoder(wheel_rpm.view(B, -1)).unsqueeze(1).expand(B, T, -1)
+        )  # Shape (B, T, hidden_size)
 
-        # Adjust heightmap and rgbmap to fit the encoder
-        heightmap = heightmap.permute(0, 3, 1, 2)
-        rgbmap = rgbmap.permute(0, 3, 1, 2)
-        encoded_heightmap = self.heightmap_encoder(heightmap).view(B, -1)
-        encoded_rgbmap = self.rgbmap_encoder(rgbmap).view(B, -1)
+        # Process heightmap and rgbmap
+        heightmap = heightmap.permute(0, 3, 1, 2)  # (B, 4, H, W)
+        rgbmap = rgbmap.permute(0, 3, 1, 2)  # (B, 3, H, W)
+
+        # Encode heightmap and rgbmap
+        encoded_heightmap = (
+            self.heightmap_encoder(heightmap).unsqueeze(1).expand(B, T, -1)
+        )  # Shape (B, T, 512)
+        encoded_rgbmap = (
+            self.rgbmap_encoder(rgbmap).unsqueeze(1).expand(B, T, -1)
+        )  # Shape (B, T, 512)
 
         # Concatenate all latent encodings
         latent_concat = torch.cat(
             (
-                encoded_state.unsqueeze(1).repeat(1, T, 1),
+                encoded_state.unsqueeze(1).expand(
+                    B, T, -1
+                ),  # Shape (B, T, hidden_size)
                 encoded_action,
                 encoded_cost,
                 encoded_breakdown,
                 encoded_rpm,
-                encoded_heightmap.unsqueeze(1).repeat(1, T, 1),
-                encoded_rgbmap.unsqueeze(1).repeat(1, T, 1),
+                encoded_heightmap,
+                encoded_rgbmap,
             ),
             dim=-1,
         )  # Shape (B, T, latent_size)
 
         latent_seq = latent_concat.permute(1, 0, 2)  # Shape (T, B, latent_size)
-        tgt = torch.zeros_like(
-            latent_seq[:-1]
-        )  # Shifted target sequence for autoregression
 
-        # Run the transformer for sequence prediction
-        transformer_out = self.latent_transformer(latent_seq[:-1], tgt)
-        prediction = self.fc_out(transformer_out)  # Shape (T, B, state_size)
+        # Run the Transformer encoder for sequence prediction
+        transformer_out = self.latent_transformer_encoder(
+            latent_seq
+        )  # Output shape (T, B, hidden_size)
 
-        return prediction.permute(1, 0, 2)  # Shape (B, T, state_size)
+        if self.use_decoder:
+            transformer_out = self.latent_transformer_decoder(
+                transformer_out, transformer_out
+            )
+
+        # Use the entire sequence output of the transformer
+        # Reshape transformer output to (B, T, latent_size)
+        transformer_out = transformer_out.permute(1, 0, 2) 
+
+        # Apply fc_out to each time step for the final prediction (B, T, state_size)
+        prediction = self.fc_out(transformer_out)
+
+        return prediction  # Shape (B, T, state_size)
