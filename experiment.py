@@ -10,7 +10,7 @@ from config.config import load_config
 from src.data.datamodule import DyanmicsDataset
 from src.data.datasplit import DataSplitUtils
 from src.trainer.simple_trainer import TrainerModule
-
+import os
 
 def visualize(model, loader, title: str):
     # sample random batch from loader
@@ -21,8 +21,8 @@ def visualize(model, loader, title: str):
     traversability_cost = batch["traversability_cost"].float()
     wheel_rpm = batch["wheel_rpm"].float()
     traversability_breakdown = batch["traversability_breakdown"].float()
-    height_map = batch["height_map"].float()
-    rgb_map = batch["rgb_map"].float()
+    height_map = batch["height_map_12x12"].float()
+    rgb_map = batch["image_left_color"].float()
 
     predictions = model.forward(
         state,
@@ -37,7 +37,7 @@ def visualize(model, loader, title: str):
     idx = np.random.randint(0, state.shape[0])
     target_xyz = targets[idx, :, :3].detach().cpu().numpy()
     pred_xyz = predictions[idx, :, :3].detach().cpu().numpy()
-
+    print("hi")
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
     ax.plot(
@@ -62,7 +62,8 @@ def visualize(model, loader, title: str):
     ax.legend()
     ax.set_title(title)
     wandb.log({title: wandb.Image(plt)})
-    plt.show()
+    # plt.savefig(f"images/{title}.png")
+    
 
 
 def run_experiment():
@@ -106,9 +107,9 @@ def run_experiment():
         "val",
         normalization_stats=train_dataset.normalization_stats,
     )
-    # print(f"{len(train_dataset)=}")
-    # print(f"{len(test_dataset)=}")
-    # print(f"{len(val_dataset)=}")
+    print(f"{len(train_dataset)=}")
+    print(f"{len(test_dataset)=}")
+    print(f"{len(val_dataset)=}")
     train_loader = train_dataset.get_dataloader()
     test_loader = test_dataset.get_dataloader()
     val_loader = val_dataset.get_dataloader()
@@ -131,9 +132,9 @@ def run_experiment():
     )
     trainer.fit(model, train_loader, val_loader)
     trainer.test(model, test_loader)
-    visualize(model, train_loader, "Train sample")
-    visualize(model, test_loader, "Test sample")
-    visualize(model, val_loader, "Val sample")
+    # visualize(model, train_loader, "Train sample")
+    # visualize(model, test_loader, "Test sample")
+    # visualize(model, val_loader, "Val sample")
 
 
 if __name__ == "__main__":

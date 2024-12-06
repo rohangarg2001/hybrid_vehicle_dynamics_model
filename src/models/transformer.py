@@ -55,8 +55,13 @@ class HeightmapEncoder(nn.Module):
         resnet = resnet18(pretrained=pretrained)
         self.feature_extractor = nn.Sequential(*list(resnet.children())[:-1])
         self.fc = nn.Linear(resnet.fc.in_features, hidden_size)
+        
+        # Freeze the feature extractor
+        for param in self.feature_extractor.parameters():
+            param.requires_grad = False
 
     def forward(self, x):
+        x = x[:, :3, :, :]  # Simply taking the first 3 channels here
         x = self.feature_extractor(x)
         return self.fc(x.view(x.size(0), -1))
 
@@ -67,6 +72,10 @@ class RGBMapEncoder(nn.Module):
         resnet = resnet18(pretrained=pretrained)
         self.feature_extractor = nn.Sequential(*list(resnet.children())[:-1])
         self.fc = nn.Linear(resnet.fc.in_features, hidden_size)
+
+        # Freeze the feature extractor
+        for param in self.feature_extractor.parameters():
+            param.requires_grad = False
 
     def forward(self, x):
         x = self.feature_extractor(x)
@@ -124,7 +133,7 @@ class AutoregressiveTransformerModel(nn.Module):
         self.heightmap_encoder = HeightmapEncoder(self.hidden_size, pretrained=self.pretrained)
         self.rgbmap_encoder = RGBMapEncoder(self.hidden_size, pretrained=self.pretrained)
 
-        self.latent_size = self.hidden_size * 8  # Adjust according to your design
+        self.latent_size = self.hidden_size * 7  # Adjust according to your design
         self.latent_transformer_encoder = LatentTransformerEncoder(self.latent_size, self.nhead, self.num_layers)
         if self.use_decoder:
             self.latent_transformer_decoder = LatentTransformerDecoder(self.latent_size, self.nhead, self.num_layers)

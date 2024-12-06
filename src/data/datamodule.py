@@ -1,8 +1,11 @@
-from typing import Dict
+from typing import Dict, List, Tuple
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from torch.utils.data import DataLoader, Dataset
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import cv2
 
 
 class DyanmicsDataset(Dataset):
@@ -29,20 +32,53 @@ class DyanmicsDataset(Dataset):
         self.envs_over_horizon = {}
         self.envs = {}
         self.normalization_stats = normalization_stats
+        self.file_order: List[Tuple[str, int]] = []
+        self.file_cumsum: List[int] = []
         self.load_data()
+
+    def load_modality_from_folder(self, folder_name, modality, idx=-1):
+        data_string = "data"
+        filepath_string = "timestamp"
+        timestamp_path = self.data_dict[folder_name][modality][filepath_string]
+        base_path = Path(timestamp_path).parent
+        timestamps = np.loadtxt(timestamp_path, dtype=np.float64)
+        timestamps = timestamps - timestamps[0]
+        self.timestamp_file_list_data[modality].append(timestamps)
+        if len(self.data_dict[folder_name][modality][data_string]) == 1:
+            data_path = (
+                base_path / self.data_dict[folder_name][modality][data_string][0]
+            )
+            data = np.load(data_path)
+            self.modality_file_list_data[modality].append(data)
+        elif modality.startswith("height_map"):
+            assert idx != -1
+            return np.load(base_path / f"{str(idx).zfill(6)}.npy")
+        elif modality.startswith("image"):
+            assert idx != -1
+            return cv2.imread(
+                str(base_path / f"{str(idx).zfill(6)}.png"), cv2.IMREAD_UNCHANGED
+            ).astype(np.uint8)
 
     def load_data(self):
         for folder_name in self.data_dict:
             for modality in self.modalities:
-                data_string = "data"
-                filepath_string = "timestamp"
-                data_path = self.data_dict[folder_name][modality][data_string]
-                timestamp_path = self.data_dict[folder_name][modality][filepath_string]
-                data = np.load(data_path)
-                timestamps = np.loadtxt(timestamp_path, dtype=np.float64)
-                timestamps = timestamps - timestamps[0]
-                self.modality_file_list_data[modality].append(data)
-                self.timestamp_file_list_data[modality].append(timestamps)
+                if modality.startswith("height_map"):
+                    num_frames = len(self.data_dict[folder_name][modality]["data"])
+                    self.file_order.append((folder_name, num_frames))
+                    # too big to be loaded into memory here
+                    continue
+                if modality.startswith("image"):
+                    # too big to be loaded into memory here
+                    continue
+
+                self.load_modality_from_folder(folder_name, modality)
+
+            # cumsum of the number of frames in each folder
+            self.file_cumsum = np.cumsum(
+                [num_frames for _, num_frames in self.file_order]
+            )
+            # if self.config["fast_dev_run"]:
+            #     break
 
         # Todo: Do we need timestamps???
         for modality in self.modalities:
@@ -90,8 +126,13 @@ class DyanmicsDataset(Dataset):
                     )
                     self.action_over_horizon.append(action_over_horizon)
                 self.action_over_horizon = np.concatenate(self.action_over_horizon)
-            else:
-                self.envs[modality] = self.modality_processed_data[modality]
+            elif self.config["data"]["modalities"][modality]["type"] == "environment":
+                if modality.startswith("height_map") or modality.startswith("image"):
+                    continue
+                self.modality_processed_data[modality] = np.concatenate(
+                    self.modality_processed_data[modality]
+                )
+            #     self.envs[modality] = self.modality_processed_data[modality]
             #     self.envs_over_horizon[modality] = []
             #     for env_modality in self.modality_processed_data[modality]:
             #         env_over_horizon = np.stack(
@@ -188,7 +229,21 @@ class DyanmicsDataset(Dataset):
         #     modality: self.envs_over_horizon[modality][idx]
         #     for modality in self.envs_over_horizon
         # }
-        environment = {modality: self.envs[modality][idx] for modality in self.envs}
+        environment = {}
+        # figure out folder name and index by binary search over self.file_cumsum
+        folder_idx = np.searchsorted(self.file_cumsum, idx)
+        start_idx = self.file_cumsum[folder_idx - 1] if folder_idx > 0 else 0
+        folder_name, _ = self.file_order[folder_idx]
+        frame_idx = idx - start_idx
+        for modality in self.modalities:
+            if self.config["data"]["modalities"][modality]["type"] == "environment":
+                if modality.startswith("height_map") or modality.startswith("image"):
+                    environment[modality] = self.load_modality_from_folder(
+                        folder_name, modality, frame_idx
+                    )
+                else:
+                    environment[modality] = self.modality_processed_data[modality][idx]
+
         return {
             "state": current_state,
             **environment,
@@ -201,4 +256,5 @@ class DyanmicsDataset(Dataset):
             self,
             batch_size=self.config["train"]["batch_size"],
             shuffle=self.is_train,
+            num_workers=self.config["train"]["num_workers"],
         )

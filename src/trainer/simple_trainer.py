@@ -126,8 +126,8 @@ class TrainerModule(L.LightningModule):
         traversability_cost = batch["traversability_cost"].float()
         wheel_rpm = batch["wheel_rpm"].float()
         traversability_breakdown = batch["traversability_breakdown"].float()
-        height_map = batch["height_map"].float()
-        rgb_map = batch["rgb_map"].float()
+        height_map = batch["height_map_12x12"].float()
+        rgb_map = batch["image_left_color"].float()
 
         predictions = self.forward(
             state,
@@ -161,8 +161,8 @@ class TrainerModule(L.LightningModule):
         traversability_cost = batch["traversability_cost"].float()
         wheel_rpm = batch["wheel_rpm"].float()
         traversability_breakdown = batch["traversability_breakdown"].float()
-        height_map = batch["height_map"].float()
-        rgb_map = batch["rgb_map"].float()
+        height_map = batch["height_map_12x12"].float()
+        rgb_map = batch["image_left_color"].float()
 
         predictions = self.forward(
             state,
@@ -193,8 +193,8 @@ class TrainerModule(L.LightningModule):
         traversability_cost = batch["traversability_cost"].float()
         wheel_rpm = batch["wheel_rpm"].float()
         traversability_breakdown = batch["traversability_breakdown"].float()
-        height_map = batch["height_map"].float()
-        rgb_map = batch["rgb_map"].float()
+        height_map = batch["height_map_12x12"].float()
+        rgb_map = batch["image_left_color"].float()
 
         predictions = self.forward(
             state,
