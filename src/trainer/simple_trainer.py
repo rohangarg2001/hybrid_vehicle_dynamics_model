@@ -16,8 +16,6 @@ class TrainerModule(L.LightningModule):
         cost_size,
         breakdown_size,
         rpm_size,
-        H,
-        W,
     ):
         super().__init__()
         self.config = config
@@ -31,8 +29,6 @@ class TrainerModule(L.LightningModule):
                 cost_size,
                 breakdown_size,
                 rpm_size,
-                H,
-                W,
             )
         elif self.config["model"]["type"] == "seq2seq":
             self.e2e_model = Seq2SeqModel(
@@ -42,8 +38,6 @@ class TrainerModule(L.LightningModule):
                 cost_size,
                 breakdown_size,
                 rpm_size,
-                H,
-                W,
             )
         elif self.config["model"]["type"] == "transformer":
             self.e2e_model = AutoregressiveTransformerModel(
@@ -53,8 +47,6 @@ class TrainerModule(L.LightningModule):
                 cost_size,
                 breakdown_size,
                 rpm_size,
-                H,
-                W,
             )
         else:
             raise ValueError(

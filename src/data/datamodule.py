@@ -23,6 +23,15 @@ class DyanmicsDataset(Dataset):
         self.modality_processed_data = {key: [] for key in self.modalities}
         self.processed_state = None
         self.data_dict = data_dict
+        for folder in self.data_dict:
+            image_data = self.data_dict[folder]["image_left_color"]["data"]
+            image_data.sort(key=lambda x: int(x.split(".")[0]))
+            self.data_dict[folder]["image_left_color"]["data"] = image_data
+
+            height_data = self.data_dict[folder]["height_map_12x12"]["data"]
+            height_data.sort(key=lambda x: int(x.split(".")[0]))
+            self.data_dict[folder]["height_map_12x12"]["data"] = height_data
+            
         self.is_train = ds_type == "train"
         self.dt = self.config["data"]["dt"]
         self.horizon = self.config["data"]["horizon_seconds"][ds_type]
@@ -51,12 +60,12 @@ class DyanmicsDataset(Dataset):
             data = np.load(data_path)
             self.modality_file_list_data[modality].append(data)
         elif modality.startswith("height_map"):
-            assert idx != -1
-            return np.load(base_path / f"{str(idx).zfill(6)}.npy")
+            data_path = self.data_dict[folder_name][modality][data_string][idx]
+            return np.load(base_path / data_path)
         elif modality.startswith("image"):
-            assert idx != -1
+            data_path = self.data_dict[folder_name][modality][data_string][idx]
             return cv2.imread(
-                str(base_path / f"{str(idx).zfill(6)}.png"), cv2.IMREAD_UNCHANGED
+                str(base_path / data_path), cv2.IMREAD_UNCHANGED
             ).astype(np.uint8)
 
     def load_data(self):

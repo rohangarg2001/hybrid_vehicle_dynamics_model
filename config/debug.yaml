@@ -51,7 +51,7 @@ train:
 
 model:
     type: "transformer" # "simple_mlp"  "seq2seq"
-    hidden_size: 128
+    hidden_size: 64
     num_layers: 2
     nhead: 4
     pretrained: True

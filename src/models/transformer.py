@@ -115,8 +115,6 @@ class AutoregressiveTransformerModel(nn.Module):
         cost_size,
         breakdown_size,
         rpm_size,
-        H=240,
-        W=600,
     ):
         super(AutoregressiveTransformerModel, self).__init__()
         self.hidden_size = config["model"]["hidden_size"]

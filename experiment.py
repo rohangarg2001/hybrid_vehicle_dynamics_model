@@ -120,8 +120,6 @@ def run_experiment():
         cost_size=1,
         breakdown_size=8,
         rpm_size=4,
-        H=240,
-        W=600,
     )  # remove hardcoding, wrap this in a class
     wandb_logger = WandbLogger(project="229-project")
     trainer = pl.Trainer(
