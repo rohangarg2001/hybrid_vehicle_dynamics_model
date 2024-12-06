@@ -240,10 +240,11 @@ class DyanmicsDataset(Dataset):
         # }
         environment = {}
         # figure out folder name and index by binary search over self.file_cumsum
-        folder_idx = np.searchsorted(self.file_cumsum, idx)
+        folder_idx = np.searchsorted(self.file_cumsum, idx, side="right")
         start_idx = self.file_cumsum[folder_idx - 1] if folder_idx > 0 else 0
         folder_name, _ = self.file_order[folder_idx]
         frame_idx = idx - start_idx
+        # print(f"{folder_name=}, {frame_idx=} {idx=} {start_idx=} {self.file_cumsum}")
         for modality in self.modalities:
             if self.config["data"]["modalities"][modality]["type"] == "environment":
                 if modality.startswith("height_map") or modality.startswith("image"):
