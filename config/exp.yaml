@@ -33,10 +33,10 @@ data:
         #     type: environment
         #     frequency: 10
         #     description: "Height Map 4 channel"
-        # image_left_color:
-        #     type: environment
-        #     frequency: 10
-        #     description: "PNG Images from left camera"
+        image_left_color:
+            type: environment
+            frequency: 10
+            description: "PNG Images from left camera"
         
 
 train:

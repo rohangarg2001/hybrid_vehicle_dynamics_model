@@ -33,16 +33,16 @@ data:
         #     type: environment
         #     frequency: 10
         #     description: "Height Map 4 channel"
-        # image_left_color:
-        #     type: environment
-        #     frequency: 10
-        #     description: "PNG Images from left camera"
+        image_left_color:
+            type: environment
+            frequency: 10
+            description: "PNG Images from left camera"
         
 
 train:
-    batch_size: 512
-    max_epochs: 50
-    learning_rate: 0.005
+    batch_size: 128
+    max_epochs: 30
+    learning_rate: 0.0005
     optimizer: "adam"
     loss: "mse"
     train_split: 0.8
@@ -51,11 +51,11 @@ train:
     normalize_images: False
     normalize_envs: False
     prefetch_factor: 1
-    val_check_interval: 1.0
+    val_check_interval: 0.01
 
 model:
     type: "transformer" # "simple_mlp"  "seq2seq"
-    hidden_size: 32
+    hidden_size: 64
     num_layers: 2
     nhead: 4
     pretrained: True
