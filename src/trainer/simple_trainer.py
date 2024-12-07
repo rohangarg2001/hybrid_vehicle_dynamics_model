@@ -7,6 +7,7 @@ from src.models.Seq2SeqModel import Seq2SeqModel
 from src.models.SimpleMLP import SimpleMLP
 from src.models.transformer import AutoregressiveTransformerModel
 
+
 class TrainerModule(L.LightningModule):
     def __init__(
         self,
@@ -49,9 +50,7 @@ class TrainerModule(L.LightningModule):
                 rpm_size,
             )
         else:
-            raise ValueError(
-                f"Invalid model type: {self.config['model']['type']}"
-            )
+            raise ValueError(f"Invalid model type: {self.config['model']['type']}")
         self.mse = tm.MeanSquaredError()
         self.mae = tm.MeanAbsoluteError()
         self.mape = tm.MeanAbsolutePercentageError()
@@ -92,9 +91,7 @@ class TrainerModule(L.LightningModule):
         _, T, _ = predictions.shape
         if self.config["train"]["loss"] == "mse":
             return nn.MSELoss()(predictions, targets) / T
-        raise ValueError(
-            f"Invalid loss function: {self.config['train']['loss']}"
-        )
+        raise ValueError(f"Invalid loss function: {self.config['train']['loss']}")
 
     def compute_metrics(self, predictions, targets, prefix: str = ""):
         _, T, _ = predictions.shape
@@ -133,9 +130,7 @@ class TrainerModule(L.LightningModule):
         loss = self.train_loss(predictions, targets)
 
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        train_metrics = self.compute_metrics(
-            predictions, targets, prefix="train"
-        )
+        train_metrics = self.compute_metrics(predictions, targets, prefix="train")
         for metric_name, metric_val in train_metrics.items():
             self.log(
                 metric_name,
@@ -167,14 +162,13 @@ class TrainerModule(L.LightningModule):
         )
         loss = self.train_loss(predictions, targets)
 
-        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log(
+            "val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, sync_dist=True
+        )
         val_metrics = self.compute_metrics(predictions, targets, prefix="val")
         for metric_name, metric_val in val_metrics.items():
             self.log(
-                metric_name,
-                metric_val,
-                on_step=True,
-                on_epoch=True,
+                metric_name, metric_val, on_step=True, on_epoch=True, sync_dist=True
             )
 
     def test_step(self, batch, batch_idx):
@@ -199,14 +193,18 @@ class TrainerModule(L.LightningModule):
         )
         loss = self.train_loss(predictions, targets)
 
-        self.log("test_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log(
+            "test_loss",
+            loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+        )
         test_metrics = self.compute_metrics(predictions, targets, prefix="test")
         for metric_name, metric_val in test_metrics.items():
             self.log(
-                metric_name,
-                metric_val,
-                on_step=True,
-                on_epoch=True,
+                metric_name, metric_val, on_step=True, on_epoch=True, sync_dist=True
             )
 
     def configure_optimizers(self):

@@ -127,6 +127,9 @@ def run_experiment():
         logger=wandb_logger,
         accelerator="gpu",
         fast_dev_run=config["fast_dev_run"],
+        log_every_n_steps=1,
+        # devices=2, 
+        # strategy="ddp",
     )
     trainer.fit(model, train_loader, val_loader)
     trainer.test(model, test_loader)

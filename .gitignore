@@ -1,5 +1,11 @@
 wandb/
 229-project/
+modality_processed_data.json
+normalization_stats.npz
+action_over_horizon.npy
+envs.npz
+processed_state.npy
+ground_truth.npy
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
