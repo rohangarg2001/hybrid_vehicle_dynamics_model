@@ -4,10 +4,9 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 from torch.utils.data import DataLoader, Dataset
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import cv2
-import json
 
+from functools import cached_property
 
 class DyanmicsDataset(Dataset):
     def __init__(
@@ -158,19 +157,19 @@ class DyanmicsDataset(Dataset):
 
         # self.normalize_data()
 
-    @property
+    @cached_property
     def processed_state(self):
         return self.load_array_from_npy(f"{self.ds_type}_processed_state.npy")
 
-    @property
+    @cached_property
     def ground_truth(self):
         return self.load_array_from_npy(f"{self.ds_type}_ground_truth.npy")
 
-    @property
+    @cached_property
     def action_over_horizon(self):
         return self.load_array_from_npy(f"{self.ds_type}_action_over_horizon.npy")
 
-    @property
+    @cached_property
     def envs(self):
         return self.load_dict_numpy_from_npz(f"{self.ds_type}_envs.npz")
 
@@ -309,4 +308,5 @@ class DyanmicsDataset(Dataset):
             batch_size=self.config["train"]["batch_size"],
             shuffle=self.is_train,
             num_workers=self.config["train"]["num_workers"],
+            # prefetch_factor=self.config["train"]["prefetch_factor"],
         )

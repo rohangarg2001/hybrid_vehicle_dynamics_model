@@ -112,11 +112,21 @@ class TrainerModule(L.LightningModule):
         state = batch["state"].float()
         actions = batch["action_horizon"].float()
         targets = batch["ground_truth"].float()
-        traversability_cost = batch["traversability_cost"].float()
-        wheel_rpm = batch["wheel_rpm"].float()
-        traversability_breakdown = batch["traversability_breakdown"].float()
-        height_map = batch["height_map_12x12"].float()
-        rgb_map = batch["image_left_color"].float()
+        traversability_cost = None
+        wheel_rpm = None
+        traversability_breakdown = None
+        height_map = None
+        rgb_map = None
+        if "traversability_cost" in batch.keys():
+            traversability_cost = batch["traversability_cost"].float()
+        if "wheel_rpm" in batch.keys():
+            wheel_rpm = batch["wheel_rpm"].float()
+        if "traversability_breakdown" in batch.keys():
+            traversability_breakdown = batch["traversability_breakdown"].float()
+        if "height_map_12x12" in batch.keys():
+            height_map = batch["height_map_12x12"].float()
+        if "image_left_color" in batch.keys():
+            rgb_map = batch["image_left_color"].float()
 
         predictions = self.forward(
             state,
@@ -141,15 +151,24 @@ class TrainerModule(L.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        # TODO: rename these to state, actions, targets
         state = batch["state"].float()
         actions = batch["action_horizon"].float()
         targets = batch["ground_truth"].float()
-        traversability_cost = batch["traversability_cost"].float()
-        wheel_rpm = batch["wheel_rpm"].float()
-        traversability_breakdown = batch["traversability_breakdown"].float()
-        height_map = batch["height_map_12x12"].float()
-        rgb_map = batch["image_left_color"].float()
+        traversability_cost = None
+        wheel_rpm = None
+        traversability_breakdown = None
+        height_map = None
+        rgb_map = None
+        if "traversability_cost" in batch.keys():
+            traversability_cost = batch["traversability_cost"].float()
+        if "wheel_rpm" in batch.keys():
+            wheel_rpm = batch["wheel_rpm"].float()
+        if "traversability_breakdown" in batch.keys():
+            traversability_breakdown = batch["traversability_breakdown"].float()
+        if "height_map_12x12" in batch.keys():
+            height_map = batch["height_map_12x12"].float()
+        if "image_left_color" in batch.keys():
+            rgb_map = batch["image_left_color"].float()
 
         predictions = self.forward(
             state,
@@ -172,15 +191,24 @@ class TrainerModule(L.LightningModule):
             )
 
     def test_step(self, batch, batch_idx):
-        # TODO: rename these to state, actions, targets
         state = batch["state"].float()
         actions = batch["action_horizon"].float()
         targets = batch["ground_truth"].float()
-        traversability_cost = batch["traversability_cost"].float()
-        wheel_rpm = batch["wheel_rpm"].float()
-        traversability_breakdown = batch["traversability_breakdown"].float()
-        height_map = batch["height_map_12x12"].float()
-        rgb_map = batch["image_left_color"].float()
+        traversability_cost = None
+        wheel_rpm = None
+        traversability_breakdown = None
+        height_map = None
+        rgb_map = None
+        if "traversability_cost" in batch.keys():
+            traversability_cost = batch["traversability_cost"].float()
+        if "wheel_rpm" in batch.keys():
+            wheel_rpm = batch["wheel_rpm"].float()
+        if "traversability_breakdown" in batch.keys():
+            traversability_breakdown = batch["traversability_breakdown"].float()
+        if "height_map_12x12" in batch.keys():
+            height_map = batch["height_map_12x12"].float()
+        if "image_left_color" in batch.keys():
+            rgb_map = batch["image_left_color"].float()
 
         predictions = self.forward(
             state,

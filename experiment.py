@@ -128,6 +128,7 @@ def run_experiment():
         accelerator="gpu",
         fast_dev_run=config["fast_dev_run"],
         log_every_n_steps=1,
+        val_check_interval=config["train"]["val_check_interval"],
         # devices=2, 
         # strategy="ddp",
     )
