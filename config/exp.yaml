@@ -40,7 +40,7 @@ data:
         
 
 train:
-    batch_size: 512
+    batch_size: 128
     max_epochs: 50
     learning_rate: 0.005
     optimizer: "adam"
@@ -55,7 +55,7 @@ train:
 
 model:
     type: "transformer" # "simple_mlp"  "seq2seq"
-    hidden_size: 32
+    hidden_size: 64
     num_layers: 2
     nhead: 4
     pretrained: True
