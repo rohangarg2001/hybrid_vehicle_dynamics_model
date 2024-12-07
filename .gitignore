@@ -2,10 +2,27 @@ wandb/
 229-project/
 modality_processed_data.json
 normalization_stats.npz
+
 action_over_horizon.npy
 envs.npz
 processed_state.npy
 ground_truth.npy
+
+
+test_action_over_horizon.npy
+test_envs.npz
+test_processed_state.npy
+test_ground_truth.npy
+
+val_action_over_horizon.npy
+val_envs.npz
+val_processed_state.npy
+val_ground_truth.npy
+
+train_action_over_horizon.npy
+train_envs.npz
+train_processed_state.npy
+train_ground_truth.npy
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
